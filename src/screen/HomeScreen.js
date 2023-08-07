@@ -2,11 +2,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { Slider, useDisclose } from 'native-base';
+import { useDisclose } from 'native-base';
 import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent } from '../components';
 import RNFS from 'react-native-fs'
 import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event } from 'react-native-track-player';
+import {encode as btoa} from 'base-64'
 
+const jsmediatags = require('jsmediatags');
 
 let musicListDir = [];
 let id = 1;
@@ -27,7 +29,7 @@ const findAudioFiles = (path = '') => {
                     var FileName = item.path.match(regFileName);
                     var extension = FileName[1];
                     if (extension == 'mp3' || extension == 'wav' || extension == 'wma' || extension == 'ogg' || extension == 'flac' || extension == 'aac') {
-                        musicListDir.push({ id: id, url: 'file://' + item.path, title: item.name})
+                        musicListDir.push({ id: id, url: 'file://' + item.path, metaPath: item.path, title: item.name })
                         id++;
                     }
                 }
@@ -58,15 +60,37 @@ const HomeScreen = () => {
     const playbackState = usePlaybackState();
     const progress = useProgress();
     const [repeatMode, setRepeatMode] = useState('Off');
-    const [titleTrack,setTitleTrack] = useState()
-
-    useTrackPlayerEvents([Event.PlaybackTrackChanged],async (e)=>{
-        if(e.type == Event.PlaybackTrackChanged && e.nextTrack != null){
+    const [titleTrack, setTitleTrack] = useState();
+    const [srcArt, setSrcArt] = useState();
+    useTrackPlayerEvents([Event.PlaybackTrackChanged], async (e) => {
+        if (e.type == Event.PlaybackTrackChanged && e.nextTrack != null) {
             const track = await TrackPlayer.getTrack(e.nextTrack);
-            const {title} = track;
+            const { title } = track;
+            const { metaPath } = track;
             setTitleTrack(title)
+            getCover(metaPath)
         }
     })
+
+    const getCover = (path)=>{
+        new jsmediatags.Reader(path)
+        .read({
+            onSuccess: (tag) => {
+                console.log('Success!');
+                var tags = tag.tags;
+                const { data, format } = tags.picture;
+                let base64String = "";
+                for (let i = 0; i < data.length; i++) {
+                    base64String += String.fromCharCode(data[i]);
+                }
+                const src = `data:${format};base64,${btoa(base64String)}`;
+                setSrcArt(src)
+            },
+            onError: (error) => {
+                setSrcArt(null)
+            }
+        });
+    }
 
     const { isOpen, onOpen, onClose } = useDisclose();
 
@@ -79,6 +103,7 @@ const HomeScreen = () => {
     const closeEqualizer = () => {
         setIsOpenEqualizer(false);
     };
+    
     // setTimeout(async () => {
     //     const [position, duration] = await Promise.all([
     //         TrackPlayer.getPosition(),
@@ -88,16 +113,16 @@ const HomeScreen = () => {
     //     console.log(`${duration - position} seconds left.`);
     // }, 10);
 
-    const changeRepeatMode = ()=>{
-        if(repeatMode == 'Off'){
+    const changeRepeatMode = () => {
+        if (repeatMode == 'Off') {
             setRepeatMode('Track')
             TrackPlayer.setRepeatMode(RepeatMode.Track)
         }
-        if(repeatMode == 'Track'){
+        if (repeatMode == 'Track') {
             setRepeatMode('Queue')
             TrackPlayer.setRepeatMode(RepeatMode.Queue)
         }
-        if(repeatMode == 'Queue'){
+        if (repeatMode == 'Queue') {
             setRepeatMode('Off')
             TrackPlayer.setRepeatMode(RepeatMode.Off)
         }
@@ -110,9 +135,8 @@ const HomeScreen = () => {
     }, []);
     return (
         <>
-            {/* <Pressable onPress={()=>togglePlayback(playbackState)}><Text style={{color:'#fff',fontSize:20}}>Play!!!</Text></Pressable> */}
             <HomeHeader onOpen={onOpen} />
-            <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} />
+            <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} />
             <TitleMusicSection titleTrack={titleTrack} />
             <TimeSection progress={progress} TrackPlayer={TrackPlayer} />
             <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} />
