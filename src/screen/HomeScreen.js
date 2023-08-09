@@ -1,11 +1,11 @@
 ﻿/* eslint-disable prettier/prettier */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Pressable } from 'react-native';
 import { Box, Spinner, useDisclose, Text, VStack } from 'native-base';
 import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent } from '../components';
 import RNFS from 'react-native-fs'
-import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event } from 'react-native-track-player';
+import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event, Capability } from 'react-native-track-player';
 import { encode as btoa } from 'base-64'
 
 const jsmediatags = require('jsmediatags');
@@ -13,7 +13,6 @@ const { height, width } = Dimensions.get('window');
 
 const setupPlayer = async () => {
     await TrackPlayer.setupPlayer();
-    // await TrackPlayer.add(songs);
 }
 
 const HomeScreen = () => {
@@ -68,7 +67,23 @@ const HomeScreen = () => {
     }
 
 
+    const getFFTime = (duration, status) => {
+        jumpTrackPlayer(duration, status)
+    }
 
+    const jumpTrackPlayer = async (duration, status) => {
+        try {
+            const currentPosition = await TrackPlayer.getPosition();
+            if (status == 'forward') {
+                await TrackPlayer.seekTo(currentPosition + parseFloat(duration));
+            } else if (status == 'backward') {
+                await TrackPlayer.seekTo(currentPosition - parseFloat(duration));
+            }
+        }
+        catch {
+            console.log('jumpTrackPlayer Error!')
+        }
+    }
 
 
     useTrackPlayerEvents([Event.PlaybackTrackChanged], async (e) => {
@@ -163,11 +178,12 @@ const HomeScreen = () => {
 
                     </Box> : ''
             }
+
             <HomeHeader onOpen={onOpen} />
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} />
             <TitleMusicSection titleTrack={titleTrack} />
             <TimeSection progress={progress} TrackPlayer={TrackPlayer} />
-            <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} />
+            <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} getFFTime={getFFTime} />
             <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} />
 
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
@@ -190,49 +206,3 @@ const styles = StyleSheet.create({
 })
 
 export { HomeScreen };
-
-
-
-// let id = 1;
-// let count = 1;
-// const regFileName = /[^\\]*\.(\w+)$/;
-// let lastItem = '';
-// const findAudioFiles = (path = '', isFirst = true) => {
-//     if (path == '') {
-//         var DirPath = RNFS.ExternalStorageDirectoryPath;
-//     } else {
-//         var DirPath = path;
-//     }
-
-//     RNFS.readDir(DirPath)
-//         .then((result) => {
-//             if (isFirst == true) {
-//                 lastItem = result[result.length - 1].name;
-//             }
-//             result.map((item, index) => {
-//                 if (item.isDirectory() && item.name != '.thumbnails') {
-//                     findAudioFiles(item.path, false)
-//                 }
-//                 if (item.isFile()) {
-//                     var FileName = item.path.match(regFileName);
-//                     var extension = FileName[1];
-//                     if (extension == 'mp3' || extension == 'wav' || extension == 'wma' || extension == 'ogg' || extension == 'flac' || extension == 'aac') {
-//                         musicListDir.push({ id: id, url: 'file://' + item.path, metaPath: item.path, title: item.name })
-//                         id++;
-//                     }
-//                 }
-//                 // if (item.name == lastItem) {
-//                 //     if(count > 1){
-//                 //         setIsLoading(false)
-//                 //         // console.log('Load:', id);
-//                 //     }
-//                 //     count++
-//                 // }
-//             })
-//         })
-//         .catch((err) => {
-//             console.log(err.message, err.code);
-//             // console.log(musicListDir.length);
-//         });
-// }
-
