@@ -1,7 +1,7 @@
 ﻿/* eslint-disable prettier/prettier */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Dimensions, Pressable } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import { Box, Spinner, useDisclose, Text, VStack } from 'native-base';
 import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent } from '../components';
 import RNFS from 'react-native-fs'
@@ -23,6 +23,7 @@ const HomeScreen = () => {
     const [titleTrack, setTitleTrack] = useState();
     const [srcArt, setSrcArt] = useState();
 
+    const [coverRotate, setCoverRotate] = useState();
 
     let id = 1;
     const findAudioFiles = async (dirPath) => {
@@ -57,8 +58,10 @@ const HomeScreen = () => {
             if (currentTrack != null) {
                 if (playbackState === State.Paused || playbackState === State.Ready) {
                     await TrackPlayer.play();
+                    setCoverRotate('play')
                 } else {
                     await TrackPlayer.pause();
+                    setCoverRotate('pause')
                 }
             }
         } catch {
@@ -94,6 +97,11 @@ const HomeScreen = () => {
                 const { path } = track;
                 setTitleTrack(name)
                 getCover(path)
+                if(playbackState == 'paused'){
+                    setCoverRotate('stop')
+                }else if(playbackState == 'playing'){
+                    setCoverRotate('reset')
+                }
             }
         }
         catch
@@ -160,9 +168,28 @@ const HomeScreen = () => {
             console.log('loadAudioFiles Error!')
         }
     }
+
+    // const drawRotate = (status='') => {
+    //     let animation = Animated.loop(
+    //         Animated.timing(rotation, {
+    //             toValue: 3600,
+    //             duration: 10000,
+    //             easing: Easing.linear,
+    //             useNativeDriver: true,
+    //         })
+    //     );
+    //     animation.start();
+    //     if(status == 'pause'){
+    //         animation.stop();
+    //     }
+    // }
+
+
     useEffect(() => {
         loadAudioFiles()
     }, []);
+
+
     return (
         <>
             {
@@ -180,7 +207,7 @@ const HomeScreen = () => {
             }
 
             <HomeHeader onOpen={onOpen} />
-            <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} />
+            <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
             <TimeSection progress={progress} TrackPlayer={TrackPlayer} />
             <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} getFFTime={getFFTime} />

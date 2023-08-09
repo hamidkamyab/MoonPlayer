@@ -1,81 +1,60 @@
 ﻿/* eslint-disable prettier/prettier */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Animated, FlatList, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Animated, Easing, Image } from 'react-native';
 import { Box, HStack, Icon, Pressable } from 'native-base';
 import { Neomorph } from 'react-native-neomorph-shadows';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import jsmediatags from 'jsmediatags';
 
-const songs = [
-    {
-        img: 'https://www.soorban.com/images/news/2022/03/1648435354_X3yV4.jpg'
-    },
-    {
-        img: 'https://roozaneh.net/wp-content/uploads/2018/07/aks-romantic-6-e1532606100217.jpg.webp'
-    },
-    {
-        img: 'https://www.soorban.com/images/news/2022/03/1648435355_L6oA2.jpg'
-    },
-    {
-        img: 'https://www.soorban.com/images/news/2022/03/1648435355_H1eR0.jpg'
-    }
-]
+
 const CoverSection = (props) => {
-    // const jsmediatags = require('jsmediatags');
-
-    const scrollX = useRef(new Animated.Value(0)).current;
+    const [rotation] = useState(new Animated.Value(0));
+    const drawRotate = (status='') => {
+        let animation = Animated.loop(
+            Animated.timing(rotation, {
+                toValue: 3600,
+                duration: 10000,
+                easing: Easing.linear,
+                useNativeDriver: true,
+            })
+        );
+        if(status == 'play'){
+            animation.start();
+        }else if(status == 'pause'){
+            animation.stop();
+        }else if(status == 'stop'){
+            animation.reset();
+        }else if(status == 'reset'){
+            animation.reset();
+            animation.start();
+        }
+    }
+    const rotate = rotation.interpolate({
+        inputRange: [0, 3600],
+        outputRange: ['0deg', '360deg'],
+    });
     useEffect(() => {
-        scrollX.addListener(({ value }) => {
-            console.log('ScrollX:', scrollX)
-        })
-        console.log('Cover:', props.CoverUrl)
-        // new jsmediatags.Reader('../../assets/Rammstein-Rammlied.mp3')
-        //     .read({
-        //         onSuccess: (tag) => {
-        //             console.log('Success!');
-        //             console.log(tag);
-        //         },
-        //         onError: (error) => {
-        //             console.log('Error');
-        //             console.log(error);
-        //         }
-        //     });
+        if(props.status == 'play'){
+            drawRotate('play')
+        }else if (props.status == 'pause') {
+            drawRotate('pause')
+        }else if (props.status == 'stop') {
+            drawRotate('stop')
+        }else if (props.status == 'reset') {
+            drawRotate('reset')
+        };
 
-        // return () => {
-        //     cleanup
-        // };
-    }, []);
+    }, [props.status]);
     return (
         <>
             <Box position={'relative'}>
                 <HStack style={styles.MainBox}>
                     <Neomorph useArt style={styles.coverShadow} >
-                        <Box style={styles.imgBox}>
+                        <Animated.View style={[styles.imgBox,{transform: [{ rotate }]} ]}>
                             <Image source={props.CoverUrl == null?require('../../assets/img/musicCover.png'):{uri: props.CoverUrl}} alt="musicCover" style={styles.imgCover} />
-                            {/* <Animated.FlatList
-                                data={props.CoverUrl}
-                                renderItem={({ index, item }) => (
-                                    <Animated.Image source={{ uri: item.coverPath }} alt="musicCover" style={styles.imgCover} />
-                                )}
-                                horizontal
-                                pagingEnabled
-                                showsHorizontalScrollIndicator={false}
-                                scrollEventThrottle={16}
-                                onScroll={Animated.event(
-                                    [{
-                                        nativeEvent: {
-                                            contentOffset: { x: scrollX }
-                                        }
-                                    }],
-                                    { useNativeDriver: true }
-                                )}
-                                style={styles.FlatListBox}
-                                contentContainerStyle={{ alignItems: 'center' }}
-                            /> */}
-                        </Box>
+                        </Animated.View>
                     </Neomorph>
                 </HStack>
                 <HStack style={styles.FavEquBox}>

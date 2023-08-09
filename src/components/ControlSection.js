@@ -33,6 +33,7 @@ const ControlSection = (props) => {
         setTouchDuration(0);
     };
 
+    
     return (
         <HStack justifyContent={'center'} alignItems={'center'} my={5} space={5} >
 
