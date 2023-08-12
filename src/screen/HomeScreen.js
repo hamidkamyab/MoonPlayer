@@ -32,8 +32,23 @@ const HomeScreen = () => {
 
     const [coverRotate, setCoverRotate] = useState();
 
+
+    let generateUniqueCode = () => {
+        const now = new Date();
+        const year = now.getFullYear().toString().slice(-2); // دو رقم آخر سال
+        const month = (now.getMonth() + 1).toString().padStart(2, '0'); // ماه با دو رقم
+        const day = now.getDate().toString().padStart(2, '0'); // روز با دو رقم
+        const hours = now.getHours().toString().padStart(2, '0'); // ساعت با دو رقم
+        const minutes = now.getMinutes().toString().padStart(2, '0'); // دقیقه با دو رقم
+        const seconds = now.getSeconds().toString().padStart(2, '0'); // ثانیه با دو رقم
+        const r = Math.floor(Math.random(11,99) * 100);
+        // ترکیب تاریخ و زمان به عنوان کد یونیک
+        const uniqueCode = year + month + day + hours + minutes + seconds + r;
+        return uniqueCode;
+
+    };
+
     /////////////////////Find And Save All Songs////////////////////
-    let id = 1;
     const findAudioFiles = async (dirPath) => {
         try {
             const files = await RNFS.readDir(dirPath);
@@ -46,10 +61,9 @@ const HomeScreen = () => {
                 } else {
                     const lowerCaseName = file.name.toLowerCase();
                     if (lowerCaseName.endsWith('.mp3') || lowerCaseName.endsWith('.wav') || lowerCaseName.endsWith('.wma') || lowerCaseName.endsWith('.ogg') || lowerCaseName.endsWith('.flac') || lowerCaseName.endsWith('.aac')) {
-                        file.id = id;
+                        file.song_key = generateUniqueCode();
                         file.url = 'file://' + file.path;
                         audioFiles.push(file);
-                        id++;
                     }
                 }
             }
@@ -68,12 +82,12 @@ const HomeScreen = () => {
                     getSongsTrackPlayer(audioFiles);
                     saveToDB(audioFiles)
                     setIsLoading(false)
-                }catch(error) {
-                    console.log('findAudioFiles in loadAudioFiles Error => ',error)
+                } catch (error) {
+                    console.log('findAudioFiles in loadAudioFiles Error => ', error)
                 }
             });
         }
-        catch(error) {
+        catch (error) {
             console.log('loadAudioFiles Error => ', error)
         }
     }
@@ -84,12 +98,10 @@ const HomeScreen = () => {
             db.transaction(tx => {
                 tx.executeSql('DROP TABLE IF EXISTS songsTbl', [],);
                 tx.executeSql(
-                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL)', [],
+                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL)', [],
                     () => {
                         songs.forEach(file => {
-                            // const cover = getCover(file.path);
-                            // console.log(cover)
-                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover) VALUES (?,?,?,?,?)', [file.name, file.path, file.size, file.url, null]);
+                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover,song_key) VALUES (?,?,?,?,?,?)', [file.name, file.path, file.size, file.url, null, file.song_key]);
                         });
                     },
                     error => {
@@ -145,11 +157,6 @@ const HomeScreen = () => {
     const getSongsTrackPlayer = async (songs) => {
         try {
             await TrackPlayer.add(songs);
-            // songs.map((item,index)=>{
-            //     getCover(path)
-            // })
-            // getCover(path)
-
         } catch (error) {
             console.log('getSongsTrackPlayer Error => ', error)
         }
@@ -167,7 +174,7 @@ const HomeScreen = () => {
                     setCoverRotate('pause')
                 }
             }
-        } catch (error){
+        } catch (error) {
             console.log("togglePlayback Error => ", error)
         }
     }
@@ -186,8 +193,8 @@ const HomeScreen = () => {
                 await TrackPlayer.seekTo(currentPosition - parseFloat(duration));
             }
         }
-        catch(error) {
-            console.log('jumpTrackPlayer Error => ',error)
+        catch (error) {
+            console.log('jumpTrackPlayer Error => ', error)
         }
     }
 
@@ -196,10 +203,29 @@ const HomeScreen = () => {
         try {
             if (e.type == Event.PlaybackTrackChanged && e.nextTrack != null) {
                 const track = await TrackPlayer.getTrack(e.nextTrack);
+                const { song_key } = track;
                 const { name } = track;
                 const { path } = track;
                 setTitleTrack(name)
-                getCover(path)
+                const db = SQLite.openDatabase({
+                    name: 'songsDb',
+                    location: 'default',
+                });
+                db.transaction(tx => {
+                    tx.executeSql('SELECT * FROM songsTbl WHERE song_key = ?', [song_key],(tx, results) => {
+                        if (results.rows.length > 0) {
+                            if (results.rows.item(0).cover == null) {
+                                getCover(path, song_key)
+                            }else if (results.rows.item(0).cover !== 'default'){
+                                setSrcArt(results.rows.item(0).cover )
+                            }else{
+                                setSrcArt(null)
+                            }
+                        } else {
+                            setSrcArt(null); // هیچ رکوردی پیدا نشد
+                        }
+                        });
+                });
                 if (playbackState == 'paused') {
                     setCoverRotate('stop')
                 } else if (playbackState == 'playing') {
@@ -207,13 +233,14 @@ const HomeScreen = () => {
                 }
             }
         }
-        catch(error) {
-            console.log('useTrackPlayerEvents Error => ',error)
+        catch (error) {
+            console.log('useTrackPlayerEvents Error => ', error)
         }
     })
 
-    const getCover = (path) => {
-        new jsmediatags.Reader(path)
+    const getCover = async (path, song_key) => {
+        const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
+        await new jsmediatags.Reader(path)
             .read({
                 onSuccess: (tag) => {
                     var tags = tag.tags;
@@ -223,10 +250,33 @@ const HomeScreen = () => {
                         base64String += String.fromCharCode(data[i]);
                     }
                     const src = `data:${format};base64,${btoa(base64String)}`;
+                    db.transaction(tx => {
+                        tx.executeSql(
+                            'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
+                            [src, song_key],
+                            (txObj, resultSet) => {
+                                //////Success
+                            },
+                            (txObj, error) => {
+                                console.log('Error Submit Cover')
+                            }
+                        );
+                    });
                     setSrcArt(src)
-                    return src;
                 },
                 onError: (error) => {
+                    db.transaction(tx => {
+                        tx.executeSql(
+                            'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
+                            ['default', song_key],
+                            (txObj, resultSet) => {
+                                //////Success
+                            },
+                            (txObj, error) => {
+                                console.log('Error Submit Defualt Cover')
+                            }
+                        );
+                    });
                     setSrcArt(null)
                 }
             });
