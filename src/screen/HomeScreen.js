@@ -7,14 +7,21 @@ import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, M
 import RNFS from 'react-native-fs'
 import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event, Capability } from 'react-native-track-player';
 import { encode as btoa } from 'base-64'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import SQLite from 'react-native-sqlite-storage';
+
 
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
 
 const setupPlayer = async () => {
-    await TrackPlayer.setupPlayer();
+    try {
+        await TrackPlayer.setupPlayer();
+    }
+    catch (error) {
+        console.log('setupPlayer Error => ', error)
+    }
 }
-
 const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const playbackState = usePlaybackState();
@@ -25,6 +32,7 @@ const HomeScreen = () => {
 
     const [coverRotate, setCoverRotate] = useState();
 
+    /////////////////////Find And Save All Songs////////////////////
     let id = 1;
     const findAudioFiles = async (dirPath) => {
         try {
@@ -52,6 +60,101 @@ const HomeScreen = () => {
         }
     };
 
+
+    async function loadAudioFiles() {
+        try {
+            await findAudioFiles(RNFS.ExternalStorageDirectoryPath).then(async (audioFiles) => {
+                try {
+                    getSongsTrackPlayer(audioFiles);
+                    saveToDB(audioFiles)
+                    setIsLoading(false)
+                }catch(error) {
+                    console.log('findAudioFiles in loadAudioFiles Error => ',error)
+                }
+            });
+        }
+        catch(error) {
+            console.log('loadAudioFiles Error => ', error)
+        }
+    }
+
+    const saveToDB = async (songs) => {
+        try {
+            const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
+            db.transaction(tx => {
+                tx.executeSql('DROP TABLE IF EXISTS songsTbl', [],);
+                tx.executeSql(
+                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL)', [],
+                    () => {
+                        songs.forEach(file => {
+                            // const cover = getCover(file.path);
+                            // console.log(cover)
+                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover) VALUES (?,?,?,?,?)', [file.name, file.path, file.size, file.url, null]);
+                        });
+                    },
+                    error => {
+                        console.log('Error executing the CREATE TABLE command:', error);
+                    }
+                );
+            });
+            await AsyncStorage.setItem('saveToDb', '1');
+        } catch (error) {
+            console.log('Error saveToDB => ', error)
+        }
+    }
+
+    const readDataFromDatabase = () => {
+        try {
+            const db = SQLite.openDatabase({
+                name: 'songsDb',
+                location: 'default',
+            });
+            db.transaction(tx => {
+                tx.executeSql('SELECT * FROM songsTbl', [], (_, results) => {
+                    const rows = results.rows;
+                    const dataList = [];
+                    for (let i = 0; i < rows.length; i++) {
+                        dataList.push(rows.item(i));
+                    }
+                    getSongsTrackPlayer(dataList);
+                });
+            });
+        } catch (error) {
+            console.log('readDataFromDatabase Error => ', error)
+        }
+    };
+
+    const loadSongs = async () => {
+        try {
+            const check = await AsyncStorage.getItem('saveToDb');
+            if (check !== null) {
+                readDataFromDatabase()
+                setIsLoading(false)
+            } else {
+                setTimeout(() => {
+                    loadAudioFiles()
+                    setIsLoading(false)
+                }, 3000);
+            }
+        } catch (error) {
+            console.log('loadSongs Error => ', error)
+        }
+    }
+    //////////////////////////////////////
+
+    const getSongsTrackPlayer = async (songs) => {
+        try {
+            await TrackPlayer.add(songs);
+            // songs.map((item,index)=>{
+            //     getCover(path)
+            // })
+            // getCover(path)
+
+        } catch (error) {
+            console.log('getSongsTrackPlayer Error => ', error)
+        }
+    }
+
     const togglePlayback = async (playbackState) => {
         try {
             const currentTrack = await TrackPlayer.getCurrentTrack();
@@ -64,8 +167,8 @@ const HomeScreen = () => {
                     setCoverRotate('pause')
                 }
             }
-        } catch {
-            console.log("togglePlayback Error!")
+        } catch (error){
+            console.log("togglePlayback Error => ", error)
         }
     }
 
@@ -83,8 +186,8 @@ const HomeScreen = () => {
                 await TrackPlayer.seekTo(currentPosition - parseFloat(duration));
             }
         }
-        catch {
-            console.log('jumpTrackPlayer Error!')
+        catch(error) {
+            console.log('jumpTrackPlayer Error => ',error)
         }
     }
 
@@ -97,16 +200,15 @@ const HomeScreen = () => {
                 const { path } = track;
                 setTitleTrack(name)
                 getCover(path)
-                if(playbackState == 'paused'){
+                if (playbackState == 'paused') {
                     setCoverRotate('stop')
-                }else if(playbackState == 'playing'){
+                } else if (playbackState == 'playing') {
                     setCoverRotate('reset')
                 }
             }
         }
-        catch
-        {
-            console.log('useTrackPlayerEvents Error!')
+        catch(error) {
+            console.log('useTrackPlayerEvents Error => ',error)
         }
     })
 
@@ -122,6 +224,7 @@ const HomeScreen = () => {
                     }
                     const src = `data:${format};base64,${btoa(base64String)}`;
                     setSrcArt(src)
+                    return src;
                 },
                 onError: (error) => {
                     setSrcArt(null)
@@ -156,18 +259,7 @@ const HomeScreen = () => {
         }
     }
 
-    async function loadAudioFiles() {
-        try {
-            await findAudioFiles(RNFS.ExternalStorageDirectoryPath).then(async (audioFiles) => {
-                await setupPlayer();
-                await TrackPlayer.add(audioFiles);
-                setIsLoading(false)
-            });
-        }
-        catch {
-            console.log('loadAudioFiles Error!')
-        }
-    }
+
 
     // const drawRotate = (status='') => {
     //     let animation = Animated.loop(
@@ -185,8 +277,10 @@ const HomeScreen = () => {
     // }
 
 
+
     useEffect(() => {
-        loadAudioFiles()
+        setupPlayer();
+        loadSongs()
     }, []);
 
 
