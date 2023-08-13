@@ -2,22 +2,22 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { Box, HStack, Text } from 'native-base';
-import { Neomorph } from 'react-native-neomorph-shadows';
-import LinearGradient from 'react-native-linear-gradient';
+// import { Neomorph } from 'react-native-neomorph-shadows';
+// import LinearGradient from 'react-native-linear-gradient';
 import Slider from '@react-native-community/slider'
 
 const TimeSection = (props) => {
     return (
         <Box style={styles.MainBox}>
             <HStack justifyContent={'space-between'}>
-                <Text style={styles.time}>{new Date(props.progress.position * 1000).toISOString().substr(14,5)}</Text>
+                <Text style={styles.time}>{new Date(props.positionTime * 1000).toISOString().substr(14,5)}</Text>
                 <Text style={styles.time}>{new Date((props.progress.duration * 1000) + 1000).toISOString().substr(14,5)}</Text>
             </HStack>
 
 
             <Slider
                 style={{ width: 360, height: 5, marginTop:10 }}
-                value={props.progress.position}
+                value={props.positionTime}
                 minimumValue={0}
                 maximumValue={props.progress.duration}
                 minimumTrackTintColor="#EE520F"

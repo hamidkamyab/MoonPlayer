@@ -41,7 +41,7 @@ const HomeScreen = () => {
         const hours = now.getHours().toString().padStart(2, '0'); // ساعت با دو رقم
         const minutes = now.getMinutes().toString().padStart(2, '0'); // دقیقه با دو رقم
         const seconds = now.getSeconds().toString().padStart(2, '0'); // ثانیه با دو رقم
-        const r = Math.floor(Math.random(11,99) * 100);
+        const r = Math.floor(Math.random(11, 99) * 100);
         // ترکیب تاریخ و زمان به عنوان کد یونیک
         const uniqueCode = year + month + day + hours + minutes + seconds + r;
         return uniqueCode;
@@ -168,9 +168,11 @@ const HomeScreen = () => {
                 if (playbackState === State.Paused || playbackState === State.Ready) {
                     await TrackPlayer.play();
                     setCoverRotate('play')
+                    songsTimer('start')
                 } else {
                     await TrackPlayer.pause();
                     setCoverRotate('pause')
+                    songsTimer('pause')
                 }
             }
         } catch (error) {
@@ -178,6 +180,23 @@ const HomeScreen = () => {
         }
     }
 
+    const [positionTime, setPositionTime] = useState(0)
+    const [positionInterval, setPositionInterval] = useState(null)
+    const songsTimer = (status = '') => {
+        if(status == 'start'){
+            setPositionInterval(setInterval(async() => {
+                setPositionTime(await TrackPlayer.getPosition())
+            }, 1000));
+        }
+        if (status == 'pause') {
+            clearInterval(positionInterval);
+        }
+        if (status == 'stop') {
+            clearInterval(positionInterval);
+            setPositionTime(0)
+        }
+
+    }
 
     const getFFTime = (duration, status) => {
         jumpTrackPlayer(duration, status)
@@ -186,6 +205,9 @@ const HomeScreen = () => {
     const jumpTrackPlayer = async (duration, status) => {
         try {
             const currentPosition = await TrackPlayer.getPosition();
+            if (duration < 2) {
+                duration = 5;
+            }
             if (status == 'forward') {
                 await TrackPlayer.seekTo(currentPosition + parseFloat(duration));
             } else if (status == 'backward') {
@@ -211,25 +233,26 @@ const HomeScreen = () => {
                     location: 'default',
                 });
                 db.transaction(tx => {
-                    tx.executeSql('SELECT * FROM songsTbl WHERE song_key = ?', [song_key],(tx, results) => {
+                    tx.executeSql('SELECT * FROM songsTbl WHERE song_key = ?', [song_key], (tx, results) => {
                         if (results.rows.length > 0) {
                             if (results.rows.item(0).cover == null) {
                                 getCover(path, song_key)
-                            }else if (results.rows.item(0).cover !== 'default'){
-                                setSrcArt(results.rows.item(0).cover )
-                            }else{
+                            } else if (results.rows.item(0).cover !== 'default') {
+                                setSrcArt(results.rows.item(0).cover)
+                            } else {
                                 setSrcArt(null)
                             }
                         } else {
                             setSrcArt(null); // هیچ رکوردی پیدا نشد
                         }
-                        });
+                    });
                 });
                 if (playbackState == 'paused') {
                     setCoverRotate('stop')
                 } else if (playbackState == 'playing') {
                     setCoverRotate('reset')
                 }
+                setPositionTime(0);
             }
         }
         catch (error) {
@@ -330,11 +353,10 @@ const HomeScreen = () => {
 
                     </Box> : ''
             }
-
             <HomeHeader onOpen={onOpen} />
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
-            <TimeSection progress={progress} TrackPlayer={TrackPlayer} />
+            <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} />
             <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} getFFTime={getFFTime} />
             <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} />
 
