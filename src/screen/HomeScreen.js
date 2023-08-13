@@ -129,6 +129,7 @@ const HomeScreen = () => {
                         dataList.push(rows.item(i));
                     }
                     getSongsTrackPlayer(dataList);
+                    setIsLoading(false)
                 });
             });
         } catch (error) {
@@ -141,11 +142,9 @@ const HomeScreen = () => {
             const check = await AsyncStorage.getItem('saveToDb');
             if (check !== null) {
                 readDataFromDatabase()
-                setIsLoading(false)
             } else {
                 setTimeout(() => {
                     loadAudioFiles()
-                    setIsLoading(false)
                 }, 3000);
             }
         } catch (error) {
@@ -308,24 +307,6 @@ const HomeScreen = () => {
             TrackPlayer.setRepeatMode(RepeatMode.Off)
         }
     }
-
-
-
-    // const drawRotate = (status='') => {
-    //     let animation = Animated.loop(
-    //         Animated.timing(rotation, {
-    //             toValue: 3600,
-    //             duration: 10000,
-    //             easing: Easing.linear,
-    //             useNativeDriver: true,
-    //         })
-    //     );
-    //     animation.start();
-    //     if(status == 'pause'){
-    //         animation.stop();
-    //     }
-    // }
-
 
 
     useEffect(() => {
