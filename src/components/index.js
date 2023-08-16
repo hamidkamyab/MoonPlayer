@@ -7,3 +7,4 @@ export * from './EqualizerComponent';
 export * from './MenuComponent';
 export * from './ControlSection';
 export * from './PropertiesComponent';
+export * from './PlaylistSection';

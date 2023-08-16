@@ -3,12 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
 import { Box, Spinner, useDisclose, Text, VStack } from 'native-base';
-import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent } from '../components';
+import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent, PlaylistSection } from '../components';
 import RNFS from 'react-native-fs'
 import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event, Capability } from 'react-native-track-player';
 import { encode as btoa } from 'base-64'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
+
 
 
 const jsmediatags = require('jsmediatags');
@@ -29,7 +30,7 @@ const HomeScreen = () => {
     const [repeatMode, setRepeatMode] = useState('Off');
     const [titleTrack, setTitleTrack] = useState();
     const [srcArt, setSrcArt] = useState();
-
+    const [songsList, setSongsList] = useState([]);
     const [coverRotate, setCoverRotate] = useState();
 
 
@@ -156,6 +157,8 @@ const HomeScreen = () => {
     const getSongsTrackPlayer = async (songs) => {
         try {
             await TrackPlayer.add(songs);
+            const currentPlaylist = await TrackPlayer.getQueue();
+            setSongsList(currentPlaylist)
         } catch (error) {
             console.log('getSongsTrackPlayer Error => ', error)
         }
@@ -311,6 +314,11 @@ const HomeScreen = () => {
         setIsOpenProperties(false)
     }
 
+    const [isOpenPlaylist, setIsOpenPlaylist] = useState(false);
+    const ClosePlaylist = () => {
+        setIsOpenPlaylist(false)
+    }
+
     const [isOpenEqualizer, setIsOpenEqualizer] = useState(false);
     const closeEqualizer = () => {
         setIsOpenEqualizer(false);
@@ -358,10 +366,11 @@ const HomeScreen = () => {
             <TitleMusicSection titleTrack={titleTrack} />
             <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} />
             <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} getFFTime={getFFTime} />
-            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} />
+            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} />
 
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
+            <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} />
 
             <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
         </>

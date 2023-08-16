@@ -7,10 +7,13 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const HomeFooter = (props) => {
+    const handelItem = ()=>{
+        props.setIsOpenPlaylist(true)
+    }
     return (
         <VStack alignItems={'center'}>
             <HStack justifyContent={'center'} alignItems={'center'} pt={3} space={5}>
-                <Pressable onPress={()=>props.changeRepeatMode()}>
+                <Pressable onPress={() => props.changeRepeatMode()}>
                     <Neomorph inner useArt style={styles.SRShadow} >
                         {
                             (props.repeatMode == "Off" || props.repeatMode == 'Queue') ?
@@ -20,10 +23,11 @@ const HomeFooter = (props) => {
                         }
                     </Neomorph>
                 </Pressable>
-                <Neomorph inner useArt style={styles.PlayList} >
-                    <Icon as={MaterialIcons} name="playlist-play" size={42} />
-                </Neomorph>
-
+                <Pressable onPress={() => handelItem()} >
+                    <Neomorph inner useArt style={styles.PlayList} >
+                        <Icon as={MaterialIcons} name="playlist-play" size={42} />
+                    </Neomorph>
+                </Pressable>
                 <Neomorph inner useArt style={styles.SRShadow} >
                     <Icon as={Ionicons} name="shuffle" size={26} />
                 </Neomorph>

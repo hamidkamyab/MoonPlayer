@@ -11,7 +11,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const CoverSection = (props) => {
     const [rotation] = useState(new Animated.Value(0));
-    const drawRotate = (status='') => {
+    const drawRotate = (status = '') => {
         let animation = Animated.loop(
             Animated.timing(rotation, {
                 toValue: 3600,
@@ -20,11 +20,11 @@ const CoverSection = (props) => {
                 useNativeDriver: true,
             })
         );
-        if(status == 'play'){
+        if (status == 'play') {
             animation.start();
-        }else if(status == 'stop' || status == 'pause'){
+        } else if (status == 'stop' || status == 'pause') {
             animation.reset();
-        }else if(status == 'reset'){
+        } else if (status == 'reset') {
             animation.reset();
             animation.start();
         }
@@ -34,13 +34,13 @@ const CoverSection = (props) => {
         outputRange: ['0deg', '360deg'],
     });
     useEffect(() => {
-        if(props.status == 'play'){
+        if (props.status == 'play') {
             drawRotate('play')
-        }else if (props.status == 'pause') {
+        } else if (props.status == 'pause') {
             drawRotate('pause')
-        }else if (props.status == 'stop') {
+        } else if (props.status == 'stop') {
             drawRotate('stop')
-        }else if (props.status == 'reset') {
+        } else if (props.status == 'reset') {
             drawRotate('reset')
         };
 
@@ -50,8 +50,14 @@ const CoverSection = (props) => {
             <Box position={'relative'}>
                 <HStack style={styles.MainBox}>
                     <Neomorph useArt style={styles.coverShadow} >
-                        <Animated.View style={[styles.imgBox,{transform: [{ rotate }]} ]}>
-                            <Image source={props.CoverUrl == null?require('../../assets/img/musicCover.png'):{uri: props.CoverUrl}} alt="musicCover" style={styles.imgCover} />
+                        <Animated.View style={[styles.imgBox, { transform: [{ rotate }] }]}>
+                            <Image source={props.CoverUrl == null ? require('../../assets/img/musicCover.png') : { uri: props.CoverUrl }} alt="musicCover" style={styles.imgCover} />
+                            {
+                                props.CoverUrl == null?
+                                ''
+                                :
+                                <Box style={styles.diskCenter}></Box>
+                            }
                         </Animated.View>
                     </Neomorph>
                 </HStack>
@@ -150,6 +156,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
+    diskCenter: {
+        position: 'absolute', 
+        borderWidth: 5, 
+        borderColor: '#EE520F', 
+        width: 48, 
+        height: 48, 
+        borderRadius: 48, 
+        backgroundColor: '#1f2124'
+    }
 })
 
 export { CoverSection };
