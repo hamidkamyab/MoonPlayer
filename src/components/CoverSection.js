@@ -22,9 +22,7 @@ const CoverSection = (props) => {
         );
         if(status == 'play'){
             animation.start();
-        }else if(status == 'pause'){
-            animation.stop();
-        }else if(status == 'stop'){
+        }else if(status == 'stop' || status == 'pause'){
             animation.reset();
         }else if(status == 'reset'){
             animation.reset();
