@@ -5,16 +5,23 @@ import { StyleSheet } from 'react-native';
 import EvilIcons from 'react-native-vector-icons/EvilIcons'
 
 const PlaylistSection = (props) => {
-    console.log('props.songsList =>', props.songsList)
+    // console.log('props.songsList =>', props.currentTrackPlaylist)
 
     const renderItem = ({ item, index }) => (
-        <HStack alignItems={'center'} py={2} borderBottomWidth={1} borderBottomColor={'#444'} >
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <Text style={styles.ItemText} >{index + 1} - </Text>
-                <Text style={styles.ItemText} >{item.name}</Text>
-            </ScrollView>
-
-        </HStack>
+        // <Pressable onPress={()=>props.playSelectTrack(item.id - 1)} >
+            <HStack alignItems={'center'} py={2} borderBottomWidth={1} borderBottomColor={'#444'} >
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} >
+                    <Text style={styles.ItemText} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#fff'} >{index + 1} - </Text>
+                    <Text style={styles.ItemText} paddingRight={50} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#fff'} >{item.name}-{item.song_key}-{item.id}</Text>
+                </ScrollView>
+                {
+                    item.song_key == props.currentTrackPlaylist ?
+                        <Icon as={EvilIcons} name='play' style={styles.playingIcon} size={28} />
+                        :
+                        ''
+                }
+            </HStack>
+        // </Pressable>
     );
     return (
         <>
@@ -31,8 +38,9 @@ const PlaylistSection = (props) => {
 
                     <FlatList
                         data={props.songsList}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item,index) => index}
                         renderItem={renderItem}
+                        showsVerticalScrollIndicator={false}
                     />
                 </VStack>
             </Modal >
@@ -45,13 +53,18 @@ const styles = StyleSheet.create({
         width: '95%',
         height: '90%',
         padding: 15,
-        // backgroundColor={'#1F2124'}
         backgroundColor: 'rgba(31, 33, 36,0.9)'
     },
     ItemText: {
-        color: '#ccc',
         fontSize: 18,
         textAlign: 'right',
+        fontWeight: 600
+    },
+    playingIcon: {
+        position: 'absolute',
+        color: '#EE520F',
+        right: 0,
+        backgroundColor: 'rgb(31, 33, 36)'
     }
 })
 

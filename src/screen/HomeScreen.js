@@ -2,36 +2,37 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
-import { Box, Spinner, useDisclose, Text, VStack } from 'native-base';
+import { Box, Spinner, useDisclose, Text, VStack, View, Button } from 'native-base';
 import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent, PlaylistSection } from '../components';
 import RNFS from 'react-native-fs'
-import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event, Capability } from 'react-native-track-player';
+// import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event, Capability } from 'react-native-track-player';
 import { encode as btoa } from 'base-64'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
-
+import Sound from 'react-native-sound';
 
 
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
 
-const setupPlayer = async () => {
-    try {
-        await TrackPlayer.setupPlayer();
-    }
-    catch (error) {
-        console.log('setupPlayer Error => ', error)
-    }
-}
+// const setupPlayer = async () => {
+//     try {
+//         await TrackPlayer.setupPlayer();
+//     }
+//     catch (error) {
+//         console.log('setupPlayer Error => ', error)
+//     }
+// }
 const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
-    const playbackState = usePlaybackState();
-    const progress = useProgress();
+    // const playbackState = usePlaybackState();
+    // const progress = useProgress();
     const [repeatMode, setRepeatMode] = useState('Off');
     const [titleTrack, setTitleTrack] = useState();
     const [srcArt, setSrcArt] = useState();
     const [songsList, setSongsList] = useState([]);
     const [coverRotate, setCoverRotate] = useState();
+    // const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
 
 
     let generateUniqueCode = () => {
@@ -42,9 +43,10 @@ const HomeScreen = () => {
         const hours = now.getHours().toString().padStart(2, '0'); // ساعت با دو رقم
         const minutes = now.getMinutes().toString().padStart(2, '0'); // دقیقه با دو رقم
         const seconds = now.getSeconds().toString().padStart(2, '0'); // ثانیه با دو رقم
-        const r = Math.floor(Math.random(11, 99) * 100);
+        const r1 = Math.floor(Math.random(0, 9) * 10);
+        const r2 = Math.floor(Math.random(0, 9) * 10);
         // ترکیب تاریخ و زمان به عنوان کد یونیک
-        const uniqueCode = year + month + day + hours + minutes + seconds + r;
+        const uniqueCode = year + month + day + hours + minutes + seconds + r1 + r2;
         return uniqueCode;
 
     };
@@ -156,112 +158,161 @@ const HomeScreen = () => {
 
     const getSongsTrackPlayer = async (songs) => {
         try {
-            await TrackPlayer.add(songs);
-            const currentPlaylist = await TrackPlayer.getQueue();
-            setSongsList(currentPlaylist)
+            setSongsList(songs)
+            // await TrackPlayer.add(songs);
+            console.log(songs[0]);
+            // const currentPlaylist = await TrackPlayer.getQueue();
         } catch (error) {
             console.log('getSongsTrackPlayer Error => ', error)
         }
     }
 
-    const togglePlayback = async (playbackState) => {
-        try {
-            const currentTrack = await TrackPlayer.getCurrentTrack();
-            if (currentTrack != null) {
-                if (playbackState === State.Paused || playbackState === State.Ready) {
-                    await TrackPlayer.play();
-                    setCoverRotate('play')
-                    songsTimer('start')
-                } else {
-                    await TrackPlayer.pause();
-                    setCoverRotate('pause')
-                    songsTimer('pause')
-                }
-            }
-        } catch (error) {
-            console.log("togglePlayback Error => ", error)
+    const [sound, setSound] = useState(null);
+    const [countPlayer,setCountPlayer] = useState(0)
+    const playFunc = (status=null) => {
+        let i = countPlayer;
+        if(status == 'back'){
+            console.log(i)
+            i >= 2 ? i = i - 2 : i = 0;
+            setCountPlayer(i)
+            console.log(i)
+
         }
+        if(countPlayer == songsList.length){
+            i = 0;
+            setCountPlayer(i)
+        }
+        stopSound();
+        const path = songsList[i].path;
+        var soundObj = new Sound(path, null, (error) => {
+            if (error) {
+                console.log('Error loading sound:', error);
+            } else {
+                setSound(soundObj);
+                soundObj.play((success) => {});
+            }
+        });
+        i++;
+        setCountPlayer(i)
     }
 
-    const [positionTime, setPositionTime] = useState(0)
-    const [positionInterval, setPositionInterval] = useState(null)
-    const songsTimer = (status = '') => {
-        if(status == 'start'){
-            setPositionInterval(setInterval(async() => {
-                setPositionTime(await TrackPlayer.getPosition())
-            }, 1000));
-        }
-        if (status == 'pause') {
-            clearInterval(positionInterval);
-        }
-        if (status == 'stop') {
-            clearInterval(positionInterval);
-            setPositionTime(0)
-        }
+    // const playSound = (status) => {
+    //     const soundObj = new Sound('/storage/emulated/0/Stamin 2.mp3', null, (error) => {
+    //         if (error) {
+    //             console.log('Error loading sound:', error);
+    //         } else {
+    //             setSound(soundObj);
+    //             soundObj.play((success) => {
+    //                 if (success) {
+    //                     console.log('Sound played successfully');
+    //                 } else {
+    //                     console.log('Error playing sound');
+    //                 }
+    //             });
+    //         }
+    //     });
+    // };
 
-    }
+    // const togglePlayback = async (playbackState) => {
+    //     try {
+    //         const currentTrack = await TrackPlayer.getCurrentTrack();
+    //         if (currentTrack != null) {
+    //             if (playbackState === State.Paused || playbackState === State.Ready) {
+    //                 await TrackPlayer.play();
+    //                 setCoverRotate('play')
+    //                 songsTimer('start')
+    //             } else {
+    //                 await TrackPlayer.pause();
+    //                 setCoverRotate('pause')
+    //                 songsTimer('pause')
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.log("togglePlayback Error => ", error)
+    //     }
+    // }
 
-    const getFFTime = (duration, status) => {
-        jumpTrackPlayer(duration, status)
-    }
+    // const [positionTime, setPositionTime] = useState(0)
+    // const [positionInterval, setPositionInterval] = useState(null)
+    // const songsTimer = (status = '') => {
+    //     if (status == 'start') {
+    //         setPositionInterval(setInterval(async () => {
+    //             setPositionTime(await TrackPlayer.getPosition())
+    //         }, 1000));
+    //     }
+    //     if (status == 'pause') {
+    //         clearInterval(positionInterval);
+    //     }
+    //     if (status == 'stop') {
+    //         clearInterval(positionInterval);
+    //         setPositionTime(0)
+    //     }
 
-    const jumpTrackPlayer = async (duration, status) => {
-        try {
-            const currentPosition = await TrackPlayer.getPosition();
-            if (duration < 2) {
-                duration = 5;
-            }
-            if (status == 'forward') {
-                await TrackPlayer.seekTo(currentPosition + parseFloat(duration));
-            } else if (status == 'backward') {
-                await TrackPlayer.seekTo(currentPosition - parseFloat(duration));
-            }
-        }
-        catch (error) {
-            console.log('jumpTrackPlayer Error => ', error)
-        }
-    }
+    // }
+
+    // const getFFTime = (duration, status) => {
+    //     jumpTrackPlayer(duration, status)
+    // }
+
+    // const jumpTrackPlayer = async (duration, status) => {
+    //     try {
+    //         const currentPosition = await TrackPlayer.getPosition();
+    //         if (duration < 2) {
+    //             duration = 5;
+    //         }
+    //         if (status == 'forward') {
+    //             await TrackPlayer.seekTo(currentPosition + parseFloat(duration));
+    //         } else if (status == 'backward') {
+    //             await TrackPlayer.seekTo(currentPosition - parseFloat(duration));
+    //         }
+    //     }
+    //     catch (error) {
+    //         console.log('jumpTrackPlayer Error => ', error)
+    //     }
+    // }
 
 
-    useTrackPlayerEvents([Event.PlaybackTrackChanged], async (e) => {
-        try {
-            if (e.type == Event.PlaybackTrackChanged && e.nextTrack != null) {
-                const track = await TrackPlayer.getTrack(e.nextTrack);
-                const { song_key } = track;
-                const { name } = track;
-                const { path } = track;
-                setTitleTrack(name)
-                const db = SQLite.openDatabase({
-                    name: 'songsDb',
-                    location: 'default',
-                });
-                db.transaction(tx => {
-                    tx.executeSql('SELECT * FROM songsTbl WHERE song_key = ?', [song_key], (tx, results) => {
-                        if (results.rows.length > 0) {
-                            if (results.rows.item(0).cover == null) {
-                                getCover(path, song_key)
-                            } else if (results.rows.item(0).cover !== 'default') {
-                                setSrcArt(results.rows.item(0).cover)
-                            } else {
-                                setSrcArt(null)
-                            }
-                        } else {
-                            setSrcArt(null); // هیچ رکوردی پیدا نشد
-                        }
-                    });
-                });
-                if (playbackState == 'paused') {
-                    setCoverRotate('stop')
-                } else if (playbackState == 'playing') {
-                    setCoverRotate('reset')
-                }
-                setPositionTime(0);
-            }
-        }
-        catch (error) {
-            console.log('useTrackPlayerEvents Error => ', error)
-        }
-    })
+    // useTrackPlayerEvents([Event.PlaybackTrackChanged], async (e) => {
+    //     try {
+    //         if (e.type == Event.PlaybackTrackChanged && e.nextTrack != null) {
+    //             const track = await TrackPlayer.getTrack(e.nextTrack);
+    //             const { song_key } = track;
+    //             const { name } = track;
+    //             const { path } = track;
+    //             setTitleTrack(name)
+    //             // setCurrentTrackPlaylist(song_key);
+
+    //             const db = SQLite.openDatabase({
+    //                 name: 'songsDb',
+    //                 location: 'default',
+    //             });
+    //             db.transaction(tx => {
+    //                 tx.executeSql('SELECT * FROM songsTbl WHERE song_key = ?', [song_key], (tx, results) => {
+    //                     if (results.rows.length > 0) {
+    //                         if (results.rows.item(0).cover == null) {
+    //                             getCover(path, song_key)
+    //                         } else if (results.rows.item(0).cover !== 'default') {
+    //                             setSrcArt(results.rows.item(0).cover)
+    //                         } else {
+    //                             setSrcArt(null)
+    //                         }
+    //                     } else {
+    //                         setSrcArt(null); // هیچ رکوردی پیدا نشد
+    //                     }
+    //                 });
+    //             });
+    //             if (playbackState == 'paused') {
+    //                 setCoverRotate('stop')
+    //             } else if (playbackState == 'playing') {
+    //                 setCoverRotate('reset')
+    //             }
+    //             setPositionTime(0);
+    //         }
+    //     }
+    //     catch (error) {
+    //         console.log('useTrackPlayerEvents Error => ', error)
+    //     }
+    // })
 
     const getCover = async (path, song_key) => {
         const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
@@ -324,25 +375,58 @@ const HomeScreen = () => {
         setIsOpenEqualizer(false);
     };
 
-    const changeRepeatMode = () => {
-        if (repeatMode == 'Off') {
-            setRepeatMode('Track')
-            TrackPlayer.setRepeatMode(RepeatMode.Track)
-        }
-        if (repeatMode == 'Track') {
-            setRepeatMode('Queue')
-            TrackPlayer.setRepeatMode(RepeatMode.Queue)
-        }
-        if (repeatMode == 'Queue') {
-            setRepeatMode('Off')
-            TrackPlayer.setRepeatMode(RepeatMode.Off)
-        }
-    }
+    // const changeRepeatMode = () => {
+    //     if (repeatMode == 'Off') {
+    //         setRepeatMode('Track')
+    //         TrackPlayer.setRepeatMode(RepeatMode.Track)
+    //     }
+    //     if (repeatMode == 'Track') {
+    //         setRepeatMode('Queue')
+    //         TrackPlayer.setRepeatMode(RepeatMode.Queue)
+    //     }
+    //     if (repeatMode == 'Queue') {
+    //         setRepeatMode('Off')
+    //         TrackPlayer.setRepeatMode(RepeatMode.Off)
+    //     }
+    // }
 
+    // const playSelectTrack = async(trackId) =>{
+    //     // const song_key = parseInt(trackId);
+    //     console.log('trackId1=>',trackId)
+    //     await TrackPlayer.skip(trackId);
+    //     await TrackPlayer.play();
+    //     console.log('trackId2=>',trackId)
+    // }
+
+   
+
+    const stopSound = () => {
+        if (sound && sound.isPlaying()) {
+            sound.stop(() => {
+                console.log('Sound stopped');
+            });
+        }
+    };
+
+    const pauseAndResumeSound = () => {
+        if (sound && sound.isPlaying()) {
+          const currentPosition = sound.getCurrentTime((seconds) => {
+            sound.pause(() => {
+              console.log('Sound paused');
+              sound.setCurrentTime(seconds);
+            });
+          });
+        }else{
+            sound.play(() => {
+                console.log('Sound resumed');
+            });
+        }
+      };
 
     useEffect(() => {
-        setupPlayer();
-        loadSongs()
+        // setupPlayer();
+        loadSongs();
+        // var audioElement = new Audio('/storage/emulated/0/Stamin 2.mp3');
     }, []);
 
 
@@ -364,13 +448,21 @@ const HomeScreen = () => {
             <HomeHeader onOpen={onOpen} />
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
-            <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} />
+            {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} />
             <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} getFFTime={getFFTime} />
-            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} />
-
+            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
+            <View>
+                <Button title="Play" onPress={playFunc} ><Text>Play</Text></Button>
+                <Button title="Pause" onPress={pauseAndResumeSound} my={5} ><Text>Pause</Text></Button>
+                <Button title="Pause" onPress={pauseAndResumeSound}  ><Text>Resume</Text></Button>
+                <Button title="Pause" onPress={playFunc} my={5} ><Text>Skip</Text></Button>
+                <Button title="Pause" onPress={()=>playFunc('back')} ><Text>Previus</Text></Button>
+            </View>
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
+
             <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} />
+            {/* currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} */}
 
             <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
         </>
