@@ -9,8 +9,7 @@ import RNFS from 'react-native-fs'
 import { encode as btoa } from 'base-64'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
-import Sound from 'react-native-sound';
-
+import SoundPlayer from 'react-native-sound-player';
 
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
@@ -167,51 +166,69 @@ const HomeScreen = () => {
         }
     }
 
-    const [sound, setSound] = useState(null);
-    const [countPlayer,setCountPlayer] = useState(0)
-    const playFunc = (status=null) => {
-        let i = countPlayer;
-        if(status == 'back'){
-            console.log(i)
-            i >= 2 ? i = i - 2 : i = 0;
-            setCountPlayer(i)
-            console.log(i)
 
-        }
-        if(countPlayer == songsList.length){
-            i = 0;
-            setCountPlayer(i)
-        }
-        stopSound();
-        const path = songsList[i].path;
-        var soundObj = new Sound(path, null, (error) => {
-            if (error) {
-                console.log('Error loading sound:', error);
+    const [duration, setDuration] = useState(0);
+    // const playPauseMusic = async () => {
+    //     if (isPlaying) {
+    //         await SoundPlayer.pause();
+    //         setIsPlaying(false);
+    //     } else {
+    //         await SoundPlayer.playUrl(songsList[0].path, 'mp3');
+    //         setIsPlaying(true);
+    //     }
+    // };
+
+    const [sound, setSound] = useState(null);
+    const [countPlayer, setCountPlayer] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+
+    const playback = async (status = null) => {
+        if (isPlaying) {
+            if (isPaused) {
+                await SoundPlayer.resume();
+                setIsPaused(false);
             } else {
-                setSound(soundObj);
-                soundObj.play((success) => {});
+                await SoundPlayer.pause();
+                setIsPaused(true);
             }
-        });
-        i++;
-        setCountPlayer(i)
+        } else {
+            Playing()
+        }
     }
 
-    // const playSound = (status) => {
-    //     const soundObj = new Sound('/storage/emulated/0/Stamin 2.mp3', null, (error) => {
-    //         if (error) {
-    //             console.log('Error loading sound:', error);
-    //         } else {
-    //             setSound(soundObj);
-    //             soundObj.play((success) => {
-    //                 if (success) {
-    //                     console.log('Sound played successfully');
-    //                 } else {
-    //                     console.log('Error playing sound');
-    //                 }
-    //             });
-    //         }
-    //     });
-    // };
+    const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
+    const Playing = async (status = null) => {
+        const path = songsList[currentAudioIndex].path;
+        await SoundPlayer.playUrl(path, 'mp3');
+        setIsPlaying(true);
+        // stopSound();
+        console.log(songsList[currentAudioIndex].name)
+        console.log('currentAudioIndex Last =>',currentAudioIndex)
+        // console.log('countPlayer Last =>',countPlayer)
+    }
+
+    const skip = async (status) => {
+        await SoundPlayer.stop();
+        if (status == 'next') {
+            const nextSong = currentAudioIndex + 1;
+            setCurrentAudioIndex(nextSong);
+            const path = songsList[nextSong].path;
+            await SoundPlayer.playUrl(path, 'mp3');
+            console.log('next Play')
+            setIsPlaying(true);
+        } else {
+            const prevSong = currentAudioIndex - 1;
+            setCurrentAudioIndex(prevSong);
+            const path = songsList[prevSong].path;
+            await SoundPlayer.playUrl(path, 'mp3');
+            console.log('prev Play')
+            setIsPlaying(true);
+        }
+        setIsPaused(false);
+    }
+
+
 
     // const togglePlayback = async (playbackState) => {
     //     try {
@@ -398,36 +415,47 @@ const HomeScreen = () => {
     //     console.log('trackId2=>',trackId)
     // }
 
-   
 
-    const stopSound = () => {
-        if (sound && sound.isPlaying()) {
-            sound.stop(() => {
-                console.log('Sound stopped');
-            });
-        }
-    };
 
-    const pauseAndResumeSound = () => {
-        if (sound && sound.isPlaying()) {
-          const currentPosition = sound.getCurrentTime((seconds) => {
-            sound.pause(() => {
-              console.log('Sound paused');
-              sound.setCurrentTime(seconds);
-            });
-          });
-        }else{
-            sound.play(() => {
-                console.log('Sound resumed');
-            });
-        }
-      };
+    // const stopSound = () => {
+    //     if (sound && sound.isPlaying()) {
+    //         sound.stop(() => {
+    //             console.log('Sound stopped');
+    //         });
+    //     }
+    // };
+
+    // const pauseAndResumeSound = () => {
+    //     if (sound && sound.isPlaying()) {
+    //         const currentPosition = sound.getCurrentTime((seconds) => {
+    //             sound.pause(() => {
+    //                 console.log('Sound paused');
+    //                 sound.setCurrentTime(seconds);
+    //             });
+    //         });
+    //     } else {
+    //         sound.play(() => {
+    //             console.log('Sound resumed');
+    //         });
+    //     }
+    // };
 
     useEffect(() => {
         // setupPlayer();
         loadSongs();
+
+        if (isPlaying) {
+            const subscription = SoundPlayer.addEventListener('FinishedPlaying', () => {
+                setIsPlaying(false);
+                skip('next')
+            });
+
+            return () => {
+                subscription.remove();
+            };
+        }
         // var audioElement = new Audio('/storage/emulated/0/Stamin 2.mp3');
-    }, []);
+    }, [isPlaying]);
 
 
     return (
@@ -448,16 +476,9 @@ const HomeScreen = () => {
             <HomeHeader onOpen={onOpen} />
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
-            {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} />
-            <ControlSection playbackState={playbackState} togglePlayback={togglePlayback} skipToNext={TrackPlayer.skipToNext} skipToPrevious={TrackPlayer.skipToPrevious} getFFTime={getFFTime} />
-            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
-            <View>
-                <Button title="Play" onPress={playFunc} ><Text>Play</Text></Button>
-                <Button title="Pause" onPress={pauseAndResumeSound} my={5} ><Text>Pause</Text></Button>
-                <Button title="Pause" onPress={pauseAndResumeSound}  ><Text>Resume</Text></Button>
-                <Button title="Pause" onPress={playFunc} my={5} ><Text>Skip</Text></Button>
-                <Button title="Pause" onPress={()=>playFunc('back')} ><Text>Previus</Text></Button>
-            </View>
+            {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} /> */}
+            <ControlSection playback={playback} next={()=>skip('next')} previous={()=>skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
+            {/* <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
 
@@ -481,3 +502,9 @@ const styles = StyleSheet.create({
 })
 
 export { HomeScreen };
+
+
+
+
+
+

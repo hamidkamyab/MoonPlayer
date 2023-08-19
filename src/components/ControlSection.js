@@ -37,7 +37,7 @@ const ControlSection = (props) => {
     return (
         <HStack justifyContent={'center'} alignItems={'center'} my={5} space={5} >
 
-            <TouchableOpacity onPress={async () => await props.skipToPrevious()}>
+            <TouchableOpacity onPress={props.previous}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
                         <LinearGradient colors={['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
@@ -56,11 +56,11 @@ const ControlSection = (props) => {
                     </Neomorph>
                 </Neomorph>
             </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => props.togglePlayback(props.playbackState)}>
+            
+            <TouchableOpacity onPress={() => props.playback()}>
                 <Neomorph useArt style={styles.playShadow}>
                     <Neomorph inner useArt style={styles.playInShadow} >
-                        <Icon as={Entypo} name={props.playbackState === 'playing' ? "controller-paus" : "controller-play"} size={54} color="#fff" style={props.playbackState !== 'playing' ? { paddingLeft: 2 } : { paddingLeft: 0 }} />
+                        <Icon as={Entypo} name={props.isPlaying ? (props.isPaused ? "controller-play" : "controller-paus"):"controller-play"} size={54} color="#fff" style={props.playbackState !== 'playing' ? { paddingLeft: 2 } : { paddingLeft: 0 }} />
                     </Neomorph>
                 </Neomorph>
             </TouchableOpacity>
@@ -75,7 +75,7 @@ const ControlSection = (props) => {
                 </Neomorph>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={async () => await props.skipToNext()}>
+            <TouchableOpacity onPress={props.next}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
                         <LinearGradient colors={['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
