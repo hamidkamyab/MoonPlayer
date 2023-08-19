@@ -178,19 +178,20 @@ const HomeScreen = () => {
     //     }
     // };
 
-    const [sound, setSound] = useState(null);
-    const [countPlayer, setCountPlayer] = useState(0);
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
 
-    const playback = async (status = null) => {
+    const playback = async () => {
         if (isPlaying) {
             if (isPaused) {
                 await SoundPlayer.resume();
                 setIsPaused(false);
+                setCoverRotate('play');
             } else {
                 await SoundPlayer.pause();
                 setIsPaused(true);
+                setCoverRotate('stop')
             }
         } else {
             Playing()
@@ -199,36 +200,51 @@ const HomeScreen = () => {
 
     const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
     const Playing = async (status = null) => {
+        const cover = songsList[currentAudioIndex].cover;
         const path = songsList[currentAudioIndex].path;
+        const song_key = songsList[currentAudioIndex].song_key;
+
         await SoundPlayer.playUrl(path, 'mp3');
+        setCoverRotate('play')
         setIsPlaying(true);
-        // stopSound();
-        console.log(songsList[currentAudioIndex].name)
-        console.log('currentAudioIndex Last =>',currentAudioIndex)
-        // console.log('countPlayer Last =>',countPlayer)
+        coverCheck(cover,path,song_key)
     }
 
     const skip = async (status) => {
         await SoundPlayer.stop();
+        setCoverRotate('stop')
         if (status == 'next') {
             const nextSong = currentAudioIndex + 1;
             setCurrentAudioIndex(nextSong);
+            const cover = songsList[nextSong].cover;
             const path = songsList[nextSong].path;
+            const song_key = songsList[nextSong].song_key;
             await SoundPlayer.playUrl(path, 'mp3');
-            console.log('next Play')
-            setIsPlaying(true);
+            coverCheck(cover,path,song_key)
         } else {
+
             const prevSong = currentAudioIndex - 1;
             setCurrentAudioIndex(prevSong);
+            const cover = songsList[prevSong].cover;
             const path = songsList[prevSong].path;
+            const song_key = songsList[prevSong].song_key;
             await SoundPlayer.playUrl(path, 'mp3');
-            console.log('prev Play')
-            setIsPlaying(true);
+            coverCheck(cover,path,song_key)
         }
+        setCoverRotate('play')
+        setIsPlaying(true);
         setIsPaused(false);
     }
 
-
+    const coverCheck = (cover,path = null,song_key = null) =>{
+        if (cover == null) {
+            getCover(path, song_key)
+        } else if (cover !== 'default') {
+            setSrcArt(cover)
+        } else {
+            setSrcArt(null)
+        }
+    }
 
     // const togglePlayback = async (playbackState) => {
     //     try {
@@ -343,11 +359,13 @@ const HomeScreen = () => {
                         base64String += String.fromCharCode(data[i]);
                     }
                     const src = `data:${format};base64,${btoa(base64String)}`;
+                    songsList[currentAudioIndex+1].cover = src;
                     db.transaction(tx => {
                         tx.executeSql(
                             'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
                             [src, song_key],
                             (txObj, resultSet) => {
+
                                 //////Success
                             },
                             (txObj, error) => {
@@ -477,7 +495,7 @@ const HomeScreen = () => {
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
             {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} /> */}
-            <ControlSection playback={playback} next={()=>skip('next')} previous={()=>skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
+            <ControlSection playback={playback} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
             {/* <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />

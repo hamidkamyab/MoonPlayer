@@ -22,11 +22,8 @@ const CoverSection = (props) => {
         );
         if (status == 'play') {
             animation.start();
-        } else if (status == 'stop' || status == 'pause') {
+        } else if (status == 'stop') {
             animation.reset();
-        } else if (status == 'reset') {
-            animation.reset();
-            animation.start();
         }
     }
     const rotate = rotation.interpolate({
@@ -36,13 +33,9 @@ const CoverSection = (props) => {
     useEffect(() => {
         if (props.status == 'play') {
             drawRotate('play')
-        } else if (props.status == 'pause') {
-            drawRotate('pause')
-        } else if (props.status == 'stop') {
+        }else if (props.status == 'stop') {
             drawRotate('stop')
-        } else if (props.status == 'reset') {
-            drawRotate('reset')
-        };
+        } 
 
     }, [props.status]);
     return (
