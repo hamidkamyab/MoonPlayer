@@ -159,7 +159,6 @@ const HomeScreen = () => {
         try {
             setSongsList(songs)
             // await TrackPlayer.add(songs);
-            console.log(songs[0]);
             // const currentPlaylist = await TrackPlayer.getQueue();
         } catch (error) {
             console.log('getSongsTrackPlayer Error => ', error)
@@ -211,6 +210,7 @@ const HomeScreen = () => {
     }
 
     const skip = async (status) => {
+        console.log(currentAudioIndex)
         await SoundPlayer.stop();
         setCoverRotate('stop')
         if (status == 'next') {
@@ -473,7 +473,7 @@ const HomeScreen = () => {
             };
         }
         // var audioElement = new Audio('/storage/emulated/0/Stamin 2.mp3');
-    }, [isPlaying]);
+    }, [currentAudioIndex]);
 
 
     return (
