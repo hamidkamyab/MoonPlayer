@@ -39,8 +39,6 @@ const ControlSection = (props) => {
 
     const handlePlayBtn = () => {
         try {
-            console.log('isPaused=>', props.isPaused);
-            console.log('isPlaying=>', props.isPlaying);
             if (props.isPlaying && !props.isPaused) {
                 setPlayBtnStatus(true)
             } else {

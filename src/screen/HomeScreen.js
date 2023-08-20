@@ -199,14 +199,28 @@ const HomeScreen = () => {
 
     const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
     const Playing = async (status = null) => {
-        const cover = songsList[currentAudioIndex].cover;
-        const path = songsList[currentAudioIndex].path;
-        const song_key = songsList[currentAudioIndex].song_key;
+        // const cover = songsList[currentAudioIndex].cover;
+        // const path = songsList[currentAudioIndex].path;
+        // const song_key = songsList[currentAudioIndex].song_key;
 
-        await SoundPlayer.playUrl(path, 'mp3');
+        // await SoundPlayer.playUrl(path, 'mp3');
+        // coverCheck(cover, path, song_key)
+        PlayBack(currentAudioIndex,false)
         setCoverRotate('play')
         setIsPlaying(true);
-        coverCheck(cover,path,song_key)
+    }
+
+    const PlayBack = async(index,setCI=true) => {
+        if(setCI){
+            setCurrentAudioIndex(index);
+            console.log('currentAudioIndex =>',currentAudioIndex)
+        }
+        const cover = songsList[index].cover;
+        const path = songsList[index].path;
+        const song_key = songsList[index].song_key;
+        setTitleTrack(songsList[index].name);
+        await SoundPlayer.playUrl(path, 'mp3');
+        coverCheck(cover, path, song_key)
     }
 
     const skip = async (status) => {
@@ -215,28 +229,23 @@ const HomeScreen = () => {
         setCoverRotate('stop')
         if (status == 'next') {
             const nextSong = currentAudioIndex + 1;
-            setCurrentAudioIndex(nextSong);
-            const cover = songsList[nextSong].cover;
-            const path = songsList[nextSong].path;
-            const song_key = songsList[nextSong].song_key;
-            await SoundPlayer.playUrl(path, 'mp3');
-            coverCheck(cover,path,song_key)
+            PlayBack(nextSong)
         } else {
-
             const prevSong = currentAudioIndex - 1;
-            setCurrentAudioIndex(prevSong);
-            const cover = songsList[prevSong].cover;
-            const path = songsList[prevSong].path;
-            const song_key = songsList[prevSong].song_key;
-            await SoundPlayer.playUrl(path, 'mp3');
-            coverCheck(cover,path,song_key)
+            PlayBack(prevSong)
+            // setCurrentAudioIndex(prevSong);
+            // const cover = songsList[prevSong].cover;
+            // const path = songsList[prevSong].path;
+            // const song_key = songsList[prevSong].song_key;
+            // await SoundPlayer.playUrl(path, 'mp3');
+            // coverCheck(cover, path, song_key)
         }
         setCoverRotate('play')
         setIsPlaying(true);
         setIsPaused(false);
     }
 
-    const coverCheck = (cover,path = null,song_key = null) =>{
+    const coverCheck = (cover, path = null, song_key = null) => {
         if (cover == null) {
             getCover(path, song_key)
         } else if (cover !== 'default') {
@@ -359,7 +368,7 @@ const HomeScreen = () => {
                         base64String += String.fromCharCode(data[i]);
                     }
                     const src = `data:${format};base64,${btoa(base64String)}`;
-                    songsList[currentAudioIndex+1].cover = src;
+                    songsList[currentAudioIndex + 1].cover = src;
                     db.transaction(tx => {
                         tx.executeSql(
                             'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
