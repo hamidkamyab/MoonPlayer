@@ -1,7 +1,8 @@
 ﻿/* eslint-disable prettier/prettier */
-import { HStack, Icon } from 'native-base';
-import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { HStack, Icon, Pressable } from 'native-base';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Neomorph } from 'react-native-neomorph-shadows';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -9,6 +10,9 @@ import Entypo from 'react-native-vector-icons/Entypo';
 const ControlSection = (props) => {
     const [touchDuration, setTouchDuration] = useState(0);
     const [animationFrameId, setAnimationFrameId] = useState(null);
+    const [pressNextBtn, setPressNextBtn] = useState(false);
+    const [pressPrevBtn, setPressPrevBtn] = useState(false);
+    const [playBtnStatus, setPlayBtnStatus] = useState(false);
 
     const handlePressIn = () => {
         const currentTime = new Date().getTime();
@@ -33,21 +37,41 @@ const ControlSection = (props) => {
         setTouchDuration(0);
     };
 
-    
+    const handlePlayBtn = () => {
+        try {
+            console.log('isPaused=>', props.isPaused);
+            console.log('isPlaying=>', props.isPlaying);
+            if (props.isPlaying && !props.isPaused) {
+                setPlayBtnStatus(true)
+            } else {
+                setPlayBtnStatus(false)
+            }
+        }
+        catch (error) {
+            console.log('handlePlayBtn Error =>', error)
+        }
+
+    }
+
+    useEffect(() => {
+        handlePlayBtn()
+    }, [props.isPlaying, props.isPaused]);
+
+
     return (
         <HStack justifyContent={'center'} alignItems={'center'} my={5} space={5} >
 
-            <TouchableOpacity onPress={props.previous}>
+            <Pressable onPress={props.previous} onPressIn={() => setPressPrevBtn(true)} onPressOut={() => setPressPrevBtn(false)}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
-                        <LinearGradient colors={['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
-                            <Icon as={Entypo} name="controller-jump-to-start" size={25} color="#ccc" />
+                        <LinearGradient colors={pressPrevBtn ? ['#18191c', '#272a2d'] : ['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                            <Icon as={Entypo} name="controller-jump-to-start" size={25} color={pressPrevBtn ? '#aaa' : '#ccc'} />
                         </LinearGradient>
                     </Neomorph>
                 </Neomorph>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity onPressIn={handlePressIn} onPressOut={() => handlePressOut('backward')} >
+            <Pressable onPressIn={handlePressIn} onPressOut={() => handlePressOut('backward')} >
                 <Neomorph useArt style={styles.FFRevShadow} >
                     <Neomorph inner useArt style={styles.FFRevInShadow} >
                         <LinearGradient colors={['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={[styles.linearGradient, { paddingEnd: 2 }]} >
@@ -55,17 +79,17 @@ const ControlSection = (props) => {
                         </LinearGradient>
                     </Neomorph>
                 </Neomorph>
-            </TouchableOpacity>
-            
-            <TouchableOpacity onPress={() => props.playback()}>
+            </Pressable>
+
+            <Pressable onPress={props.playback}>
                 <Neomorph useArt style={styles.playShadow}>
-                    <Neomorph inner useArt style={styles.playInShadow} >
-                        <Icon as={Entypo} name={props.isPlaying ? (props.isPaused ? "controller-play" : "controller-paus"):"controller-play"} size={54} color="#fff" style={props.playbackState !== 'playing' ? { paddingLeft: 2 } : { paddingLeft: 0 }} />
+                    <Neomorph inner useArt style={playBtnStatus ? styles.playingInShadow : styles.playInShadow} >
+                        <Icon as={Entypo} name={props.isPlaying ? (props.isPaused ? "controller-play" : "controller-paus") : "controller-play"} size={54} color="#fff" style={playBtnStatus ? { paddingLeft: 0} : { paddingLeft: 2, transform: [{ rotate: '180deg' }]}} />
                     </Neomorph>
                 </Neomorph>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity onPressIn={handlePressIn} onPressOut={() => handlePressOut('forward')} >
+            <Pressable onPressIn={handlePressIn} onPressOut={() => handlePressOut('forward')} >
                 <Neomorph useArt style={styles.FFRevShadow} >
                     <Neomorph inner useArt style={styles.FFRevInShadow} >
                         <LinearGradient colors={['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={[styles.linearGradient, { paddingLeft: 2 }]}>
@@ -73,17 +97,17 @@ const ControlSection = (props) => {
                         </LinearGradient>
                     </Neomorph>
                 </Neomorph>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity onPress={props.next}>
+            <Pressable onPress={props.next} onPressIn={() => setPressNextBtn(true)} onPressOut={() => setPressNextBtn(false)}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
-                        <LinearGradient colors={['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
-                            <Icon as={Entypo} name="controller-next" size={25} color="#ccc" />
+                        <LinearGradient colors={pressNextBtn ? ['#18191c', '#272a2d'] : ['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                            <Icon as={Entypo} name="controller-next" size={25} color={pressNextBtn ? '#aaa' : '#ccc'} />
                         </LinearGradient>
                     </Neomorph>
                 </Neomorph>
-            </TouchableOpacity>
+            </Pressable>
         </HStack>
     );
 }
@@ -102,7 +126,7 @@ const styles = StyleSheet.create({
     NexPrevInShadow: {
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 4,
-        backgroundColor: 'rgb(26,31,35)',
+        backgroundColor: 'rgb(16,21,25)',
         width: 46,
         height: 46,
         borderRadius: 46,
@@ -119,7 +143,7 @@ const styles = StyleSheet.create({
     playShadow: {
         shadowOffset: { width: 8, height: 8 },
         shadowRadius: 8,
-        backgroundColor: 'rgb(46,48,51)',
+        backgroundColor: 'rgb(96,98,101)',
         width: 80,
         height: 80,
         borderRadius: 80,
@@ -128,13 +152,25 @@ const styles = StyleSheet.create({
     },
     playInShadow: {
         shadowOffset: { width: 8, height: 8 },
-        shadowRadius: 8,
+        shadowRadius: 4,
         backgroundColor: '#EE520F',
         width: 80,
         height: 80,
         borderRadius: 80,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        transform: [{ rotate: '180deg' }]
+    },
+    playingInShadow: {
+        shadowOffset: { width: 8, height: 8 },
+        shadowRadius: 4,
+        backgroundColor: '#EE520F',
+        width: 80,
+        height: 80,
+        borderRadius: 80,
+        justifyContent: 'center',
+        alignItems: 'center',
+        transform: [{ rotate: '0deg' }]
     },
     FFRevShadow: {
         shadowOffset: { width: 3, height: 3 },

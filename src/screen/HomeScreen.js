@@ -190,7 +190,7 @@ const HomeScreen = () => {
             } else {
                 await SoundPlayer.pause();
                 setIsPaused(true);
-                setCoverRotate('stop')
+                setCoverRotate('stop');
             }
         } else {
             Playing()
