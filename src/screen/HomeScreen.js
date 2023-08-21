@@ -181,7 +181,8 @@ const HomeScreen = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
 
-    const playback = async () => {
+    const PlayPause = async () => {
+        console.log('isPlaying',isPlaying)
         if (isPlaying) {
             if (isPaused) {
                 await SoundPlayer.resume();
@@ -193,6 +194,7 @@ const HomeScreen = () => {
                 setCoverRotate('stop');
             }
         } else {
+            setIsPlaying(true);
             Playing()
         }
     }
@@ -206,21 +208,20 @@ const HomeScreen = () => {
         // await SoundPlayer.playUrl(path, 'mp3');
         // coverCheck(cover, path, song_key)
         PlayBack(currentAudioIndex,false)
-        setCoverRotate('play')
-        setIsPlaying(true);
+        setCoverRotate('play');
     }
 
     const PlayBack = async(index,setCI=true) => {
         if(setCI){
             setCurrentAudioIndex(index);
-            console.log('currentAudioIndex =>',currentAudioIndex)
         }
         const cover = songsList[index].cover;
         const path = songsList[index].path;
         const song_key = songsList[index].song_key;
         setTitleTrack(songsList[index].name);
         await SoundPlayer.playUrl(path, 'mp3');
-        coverCheck(cover, path, song_key)
+        coverCheck(cover, path, song_key);
+        console.log('isPlaying2 =>',isPlaying)
     }
 
     const skip = async (status) => {
@@ -443,46 +444,21 @@ const HomeScreen = () => {
     // }
 
 
-
-    // const stopSound = () => {
-    //     if (sound && sound.isPlaying()) {
-    //         sound.stop(() => {
-    //             console.log('Sound stopped');
-    //         });
-    //     }
-    // };
-
-    // const pauseAndResumeSound = () => {
-    //     if (sound && sound.isPlaying()) {
-    //         const currentPosition = sound.getCurrentTime((seconds) => {
-    //             sound.pause(() => {
-    //                 console.log('Sound paused');
-    //                 sound.setCurrentTime(seconds);
-    //             });
-    //         });
-    //     } else {
-    //         sound.play(() => {
-    //             console.log('Sound resumed');
-    //         });
-    //     }
-    // };
-
     useEffect(() => {
-        // setupPlayer();
         loadSongs();
 
         if (isPlaying) {
             const subscription = SoundPlayer.addEventListener('FinishedPlaying', () => {
-                setIsPlaying(false);
+                // setIsPlaying(false);
                 skip('next')
+                console.log()
             });
 
             return () => {
                 subscription.remove();
             };
         }
-        // var audioElement = new Audio('/storage/emulated/0/Stamin 2.mp3');
-    }, [currentAudioIndex]);
+    }, [currentAudioIndex,isPlaying]);
 
 
     return (
@@ -504,7 +480,7 @@ const HomeScreen = () => {
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
             {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} /> */}
-            <ControlSection playback={playback} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
+            <ControlSection PlayPause={PlayPause} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
             {/* <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />

@@ -79,7 +79,7 @@ const ControlSection = (props) => {
                 </Neomorph>
             </Pressable>
 
-            <Pressable onPress={props.playback}>
+            <Pressable onPress={props.PlayPause}>
                 <Neomorph useArt style={styles.playShadow}>
                     <Neomorph inner useArt style={playBtnStatus ? styles.playingInShadow : styles.playInShadow} >
                         <Icon as={Entypo} name={props.isPlaying ? (props.isPaused ? "controller-play" : "controller-paus") : "controller-play"} size={54} color="#fff" style={playBtnStatus ? { paddingLeft: 0} : { paddingLeft: 2, transform: [{ rotate: '180deg' }]}} />
