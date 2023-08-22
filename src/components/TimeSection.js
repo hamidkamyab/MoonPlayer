@@ -10,20 +10,19 @@ const TimeSection = (props) => {
     return (
         <Box style={styles.MainBox}>
             <HStack justifyContent={'space-between'}>
-                <Text style={styles.time}>{new Date(props.positionTime * 1000).toISOString().substr(14,5)}</Text>
-                <Text style={styles.time}>{new Date((props.progress.duration * 1000) + 1000).toISOString().substr(14,5)}</Text>
+                <Text style={styles.time}>{new Date(props.position * 1000).toISOString().substr(14, 5)}</Text>
+                <Text style={styles.time}>{new Date((props.duration * 1000) + 1000).toISOString().substr(14, 5)}</Text>
             </HStack>
 
-
             <Slider
-                style={{ width: 360, height: 5, marginTop:10 }}
-                value={props.positionTime}
+                style={{ width: 360, marginTop: 10 }}
+                value={props.position}
                 minimumValue={0}
-                maximumValue={props.progress.duration}
+                maximumValue={props.duration}
                 minimumTrackTintColor="#EE520F"
                 maximumTrackTintColor="#000"
                 thumbTintColor='#F6A730'
-                onSlidingComplete={async (value)=>{
+                onSlidingComplete={async (value) => {
                     await props.TrackPlayer.seekTo(value)
                 }}
             />
@@ -90,7 +89,8 @@ const styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 12,
-    }
+    },
+    
 })
 
 export { TimeSection };

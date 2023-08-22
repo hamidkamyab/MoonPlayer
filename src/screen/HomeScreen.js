@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
-import { Box, Spinner, useDisclose, Text, VStack, View, Button } from 'native-base';
+import { Box, Spinner, useDisclose, Text, VStack } from 'native-base';
 import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent, PlaylistSection } from '../components';
 import RNFS from 'react-native-fs'
 // import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event, Capability } from 'react-native-track-player';
@@ -10,6 +10,7 @@ import { encode as btoa } from 'base-64'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
 import SoundPlayer from 'react-native-sound-player';
+import Slider from '@react-native-community/slider';
 
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
@@ -31,6 +32,8 @@ const HomeScreen = () => {
     const [srcArt, setSrcArt] = useState();
     const [songsList, setSongsList] = useState([]);
     const [coverRotate, setCoverRotate] = useState();
+    const [position, setPosition] = useState(0);
+    const [duration, setDuration] = useState(0);
     // const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
 
 
@@ -158,6 +161,7 @@ const HomeScreen = () => {
     const getSongsTrackPlayer = async (songs) => {
         try {
             setSongsList(songs)
+            // PlayBack(0,false)
             // await TrackPlayer.add(songs);
             // const currentPlaylist = await TrackPlayer.getQueue();
         } catch (error) {
@@ -166,7 +170,7 @@ const HomeScreen = () => {
     }
 
 
-    const [duration, setDuration] = useState(0);
+    
     // const playPauseMusic = async () => {
     //     if (isPlaying) {
     //         await SoundPlayer.pause();
@@ -180,22 +184,27 @@ const HomeScreen = () => {
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
-
     const PlayPause = async () => {
-        console.log('isPlaying',isPlaying)
-        if (isPlaying) {
-            if (isPaused) {
-                await SoundPlayer.resume();
-                setIsPaused(false);
-                setCoverRotate('play');
+        try {
+            console.log('isPlaying', isPlaying)
+            if (isPlaying) {
+                if (isPaused) {
+                    await SoundPlayer.resume();
+                    setIsPaused(false);
+                    setCoverRotate('play');
+                } else {
+                    await SoundPlayer.pause();
+                    setIsPaused(true);
+                    setCoverRotate('stop');
+                    // seekController('stop');
+                }
             } else {
-                await SoundPlayer.pause();
-                setIsPaused(true);
-                setCoverRotate('stop');
+                setIsPlaying(true);
+                Playing()
             }
-        } else {
-            setIsPlaying(true);
-            Playing()
+        }
+        catch (error) {
+            console.log('PlayPause Error =>', error)
         }
     }
 
@@ -207,44 +216,111 @@ const HomeScreen = () => {
 
         // await SoundPlayer.playUrl(path, 'mp3');
         // coverCheck(cover, path, song_key)
-        PlayBack(currentAudioIndex,false)
+        PlayBack(currentAudioIndex, false)
         setCoverRotate('play');
     }
 
-    const PlayBack = async(index,setCI=true) => {
-        if(setCI){
-            setCurrentAudioIndex(index);
+    // const [intervalId, setIntervalId] = useState(null);
+    // const seekController = (status = null) => {
+    //     console.log('seekController => ', status)
+    //     setIntervalId(setInterval(() => {
+    //         console.log('Test')
+    //     }, 2000));
+    //     if (status == 'stop') {
+    //         clearInterval(intervalId)
+    //         console.log('clearInterval(intervalId)', intervalId)
+
+    //     }
+    // }
+
+    const [intervalId, setIntervalId] = useState(null);
+    const seekController = (status = null) => {
+        if (status === 'stop' && intervalId) {
+            clearInterval(intervalId);
+            setIntervalId(null);
+        } else if (intervalId === null && status !== 'stop') {
+            const newIntervalId = setInterval(async() => {
+                console.log('Test')
+                const info = await SoundPlayer.getInfo();
+                console.log('info => ',info.currentTime)
+                setPosition(info.currentTime)
+                console.log('Postion => ',position)
+            }, 1000);
+            setIntervalId(newIntervalId);
         }
-        const cover = songsList[index].cover;
-        const path = songsList[index].path;
-        const song_key = songsList[index].song_key;
-        setTitleTrack(songsList[index].name);
-        await SoundPlayer.playUrl(path, 'mp3');
-        coverCheck(cover, path, song_key);
-        console.log('isPlaying2 =>',isPlaying)
+    };
+
+    useEffect(() => {
+        if (!isPlaying || isPaused) {
+            seekController('stop');
+        } else {
+            seekController();
+        }
+    }, [isPlaying, isPaused]);
+
+    const PlayBack = async (index, setCI = true) => {
+        try {
+            if (setCI) {
+                setCurrentAudioIndex(index);
+            }
+            const cover = songsList[index].cover;
+            const path = songsList[index].path;
+            const song_key = songsList[index].song_key;
+            setTitleTrack(songsList[index].name);
+            await SoundPlayer.playUrl(path, 'mp3');
+            const info = await SoundPlayer.getInfo();
+            setDuration(info.duration);
+            coverCheck(cover, path, song_key);
+        }
+        catch (error) {
+            console.log('PlayBack Error => ', error)
+        }
     }
 
     const skip = async (status) => {
-        console.log(currentAudioIndex)
-        await SoundPlayer.stop();
-        setCoverRotate('stop')
-        if (status == 'next') {
-            const nextSong = currentAudioIndex + 1;
-            PlayBack(nextSong)
-        } else {
-            const prevSong = currentAudioIndex - 1;
-            PlayBack(prevSong)
-            // setCurrentAudioIndex(prevSong);
-            // const cover = songsList[prevSong].cover;
-            // const path = songsList[prevSong].path;
-            // const song_key = songsList[prevSong].song_key;
-            // await SoundPlayer.playUrl(path, 'mp3');
-            // coverCheck(cover, path, song_key)
+        try {
+            console.log(currentAudioIndex)
+            await SoundPlayer.stop();
+            setCoverRotate('stop')
+            if (status == 'next') {
+                const nextSong = currentAudioIndex + 1;
+                PlayBack(nextSong)
+            } else {
+                const prevSong = currentAudioIndex - 1;
+                PlayBack(prevSong)
+            }
+            setCoverRotate('play')
+            setIsPlaying(true);
+            setIsPaused(false);
         }
-        setCoverRotate('play')
-        setIsPlaying(true);
-        setIsPaused(false);
+        catch (error) {
+            console.log('skip Error =>', error)
+        }
     }
+
+
+    // const getFFTime = (duration, status) => {
+    //     jumpTrackPlayer(duration, status)
+
+    // }
+
+    // const jumpTrackPlayer = async (duration, status) => {
+    //     try {
+    //         const currentPosition = await SoundPlayer.getInfo() // Also, you need to await this because it is async
+    //         if (duration < 2) {
+    //             duration = 5;
+    //         }
+    //         if (status == 'forward') {
+    //             await SoundPlayer.seek(currentPosition.currentTime + parseInt(duration))
+    //         } else if (status == 'backward') {
+    //             await SoundPlayer.seek(currentPosition.currentTime - parseInt(duration));
+    //         }
+    //         console.log(currentPosition.currentTime)
+    //     }
+    //     catch (error) {
+    //         console.log('jumpTrackPlayer Error => ', error)
+    //     }
+    // }
 
     const coverCheck = (cover, path = null, song_key = null) => {
         if (cover == null) {
@@ -444,6 +520,15 @@ const HomeScreen = () => {
     // }
 
 
+    const onSeek = async (value) => {
+        try {
+            setPosition(value);
+            await SoundPlayer.seek(value);
+        } catch (error) {
+            console.log('onSeek Error =>', error)
+        }
+    };
+
     useEffect(() => {
         loadSongs();
 
@@ -451,14 +536,19 @@ const HomeScreen = () => {
             const subscription = SoundPlayer.addEventListener('FinishedPlaying', () => {
                 // setIsPlaying(false);
                 skip('next')
-                console.log()
+                // setPosition(0);
             });
+            // setInterval(() => {
+            //     if (isPlaying) {
+            //         console.log('Play')
+            //     }
+            // }, 1000);
 
             return () => {
                 subscription.remove();
             };
         }
-    }, [currentAudioIndex,isPlaying]);
+    }, [currentAudioIndex, isPlaying]);
 
 
     return (
@@ -480,7 +570,31 @@ const HomeScreen = () => {
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
             {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} /> */}
+            <TimeSection position={position} onSeek={onSeek} duration={duration} />
+
+            {/* <Slider
+                value={position}
+                onValueChange={onSeek}
+                minimumValue={0}
+                maximumValue={duration}
+                step={1}
+            />
+            <Text style={{color:'#fff'}}>{position}</Text>
+            <Slider
+                style={{ width: 360, height: 5, marginTop: 10 }}
+                value={position}
+                minimumValue={0}
+                maximumValue={duration}
+                minimumTrackTintColor="#EE520F"
+                maximumTrackTintColor="#000"
+                thumbTintColor='#F6A730'
+                onSlidingComplete={async (value) => {
+                    onSeek(value);
+                }}
+            /> */}
+
             <ControlSection PlayPause={PlayPause} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
+            {/* getFFTime={getFFTime} */}
             {/* <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
