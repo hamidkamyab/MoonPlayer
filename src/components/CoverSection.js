@@ -74,7 +74,7 @@ const CoverSection = (props) => {
 
 const styles = StyleSheet.create({
     MainBox: {
-        padding: 20,
+        padding: 10,
         justifyContent: 'center',
         alignItems: 'center'
     },

@@ -34,7 +34,7 @@ const HomeScreen = () => {
     const [coverRotate, setCoverRotate] = useState();
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [runLoadSong,setRunLoadSong] = useState(false)
+    const [runLoadSong, setRunLoadSong] = useState(false)
     // const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
 
 
@@ -241,11 +241,8 @@ const HomeScreen = () => {
             setIntervalId(null);
         } else if (intervalId === null && status !== 'stop') {
             const newIntervalId = setInterval(async () => {
-                console.log('Test')
                 const info = await SoundPlayer.getInfo();
-                console.log('info => ', info.currentTime)
                 setPosition(info.currentTime)
-                console.log('Postion => ', position)
             }, 1000);
             setIntervalId(newIntervalId);
         }
@@ -261,8 +258,8 @@ const HomeScreen = () => {
 
     useEffect(() => {
 
-        if(songsList.length > 0 && !runLoadSong){
-            PlayBack(0,false,true)
+        if (songsList.length > 0 && !runLoadSong) {
+            PlayBack(0, false, true)
             setRunLoadSong(true)
             console.log('first Song')
         }
@@ -270,6 +267,7 @@ const HomeScreen = () => {
 
     const PlayBack = async (index, setCI = true, run = false) => {
         try {
+            console.log('index =>', index, ' / ', run)
             if (setCI) {
                 setCurrentAudioIndex(index);
             }
@@ -277,7 +275,7 @@ const HomeScreen = () => {
             const path = songsList[index].path;
             const song_key = songsList[index].song_key;
             setTitleTrack(songsList[index].name);
-            if(!run){
+            if (!run) {
                 await SoundPlayer.playUrl(path, 'mp3');
             }
             const info = await SoundPlayer.getInfo();
@@ -291,15 +289,29 @@ const HomeScreen = () => {
 
     const skip = async (status) => {
         try {
-            console.log(currentAudioIndex)
             await SoundPlayer.stop();
             setCoverRotate('stop')
             if (status == 'next') {
-                const nextSong = currentAudioIndex + 1;
+                let nextSong;
+                if (repeatMode == 'Queue') {
+                    if (currentAudioIndex == songsList.length - 1) {
+                        nextSong = 0;
+                    }
+                } else {
+                    nextSong = currentAudioIndex + 1;
+                }
                 PlayBack(nextSong)
-            } else {
-                const prevSong = currentAudioIndex - 1;
+            } else if (status == 'previous') {
+                let prevSong;
+                if (currentAudioIndex == 0) {
+                    prevSong = 0;
+                } else {
+                    prevSong = currentAudioIndex - 1;
+                }
                 PlayBack(prevSong)
+            } else if (status == 'repeat') {
+                const repaetSong = currentAudioIndex;
+                PlayBack(repaetSong)
             }
             setCoverRotate('play')
             setIsPlaying(true);
@@ -508,20 +520,23 @@ const HomeScreen = () => {
         setIsOpenEqualizer(false);
     };
 
-    // const changeRepeatMode = () => {
-    //     if (repeatMode == 'Off') {
-    //         setRepeatMode('Track')
-    //         TrackPlayer.setRepeatMode(RepeatMode.Track)
-    //     }
-    //     if (repeatMode == 'Track') {
-    //         setRepeatMode('Queue')
-    //         TrackPlayer.setRepeatMode(RepeatMode.Queue)
-    //     }
-    //     if (repeatMode == 'Queue') {
-    //         setRepeatMode('Off')
-    //         TrackPlayer.setRepeatMode(RepeatMode.Off)
-    //     }
-    // }
+    const changeRepeatMode = () => {
+        if (repeatMode == 'Off') {
+            console.log('changeRepeatMode =>', repeatMode)
+            setRepeatMode('Track')
+            // TrackPlayer.setRepeatMode(RepeatMode.Track)
+        }
+        if (repeatMode == 'Track') {
+            console.log('changeRepeatMode =>', repeatMode)
+            setRepeatMode('Queue')
+            // TrackPlayer.setRepeatMode(RepeatMode.Queue)
+        }
+        if (repeatMode == 'Queue') {
+            console.log('changeRepeatMode =>', repeatMode)
+            setRepeatMode('Off')
+            // TrackPlayer.setRepeatMode(RepeatMode.Off)
+        }
+    }
 
     // const playSelectTrack = async(trackId) =>{
     //     // const song_key = parseInt(trackId);
@@ -546,8 +561,13 @@ const HomeScreen = () => {
 
         if (isPlaying) {
             const subscription = SoundPlayer.addEventListener('FinishedPlaying', () => {
+                console.log('repeatMode 0 =>', repeatMode)
                 // setIsPlaying(false);
-                skip('next')
+                if (repeatMode == 'Track') {
+                    skip('repeat')
+                } else {
+                    skip('next')
+                }
                 // setPosition(0);
             });
             // setInterval(() => {
@@ -560,11 +580,11 @@ const HomeScreen = () => {
                 subscription.remove();
             };
         }
-    }, [currentAudioIndex, isPlaying]);
+    }, [currentAudioIndex, isPlaying, repeatMode]);
 
 
     return (
-        <>
+        <Box position={'relative'} h={'100%'} >
             {
                 isLoading ?
                     <Box style={styles.loadingLayer} >
@@ -578,36 +598,17 @@ const HomeScreen = () => {
 
                     </Box> : ''
             }
+
             <HomeHeader onOpen={onOpen} />
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
             <TitleMusicSection titleTrack={titleTrack} />
             {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} /> */}
             <TimeSection position={position} onSeek={onSeek} duration={duration} />
 
-            {/* <Slider
-                value={position}
-                onValueChange={onSeek}
-                minimumValue={0}
-                maximumValue={duration}
-                step={1}
-            />
-            <Text style={{color:'#fff'}}>{position}</Text>
-            <Slider
-                style={{ width: 360, height: 5, marginTop: 10 }}
-                value={position}
-                minimumValue={0}
-                maximumValue={duration}
-                minimumTrackTintColor="#EE520F"
-                maximumTrackTintColor="#000"
-                thumbTintColor='#F6A730'
-                onSlidingComplete={async (value) => {
-                    onSeek(value);
-                }}
-            /> */}
-
             <ControlSection PlayPause={PlayPause} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
             {/* getFFTime={getFFTime} */}
             {/* <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
+            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} />
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
 
@@ -615,7 +616,11 @@ const HomeScreen = () => {
             {/* currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} */}
 
             <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
-        </>
+
+            <VStack position={'absolute'} bottom={4} alignItems={'center'} w={'100%'} >
+                <Text color={'#666'} fontSize={10} fontWeight={'bold'} >Designed By: HamidKamyab</Text>
+            </VStack>
+        </Box>
     );
 }
 
