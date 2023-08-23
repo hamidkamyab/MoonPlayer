@@ -34,6 +34,7 @@ const HomeScreen = () => {
     const [coverRotate, setCoverRotate] = useState();
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [runLoadSong,setRunLoadSong] = useState(false)
     // const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
 
 
@@ -170,7 +171,7 @@ const HomeScreen = () => {
     }
 
 
-    
+
     // const playPauseMusic = async () => {
     //     if (isPlaying) {
     //         await SoundPlayer.pause();
@@ -239,12 +240,12 @@ const HomeScreen = () => {
             clearInterval(intervalId);
             setIntervalId(null);
         } else if (intervalId === null && status !== 'stop') {
-            const newIntervalId = setInterval(async() => {
+            const newIntervalId = setInterval(async () => {
                 console.log('Test')
                 const info = await SoundPlayer.getInfo();
-                console.log('info => ',info.currentTime)
+                console.log('info => ', info.currentTime)
                 setPosition(info.currentTime)
-                console.log('Postion => ',position)
+                console.log('Postion => ', position)
             }, 1000);
             setIntervalId(newIntervalId);
         }
@@ -258,7 +259,16 @@ const HomeScreen = () => {
         }
     }, [isPlaying, isPaused]);
 
-    const PlayBack = async (index, setCI = true) => {
+    useEffect(() => {
+
+        if(songsList.length > 0 && !runLoadSong){
+            PlayBack(0,false,true)
+            setRunLoadSong(true)
+            console.log('first Song')
+        }
+    }, [songsList]);
+
+    const PlayBack = async (index, setCI = true, run = false) => {
         try {
             if (setCI) {
                 setCurrentAudioIndex(index);
@@ -267,7 +277,9 @@ const HomeScreen = () => {
             const path = songsList[index].path;
             const song_key = songsList[index].song_key;
             setTitleTrack(songsList[index].name);
-            await SoundPlayer.playUrl(path, 'mp3');
+            if(!run){
+                await SoundPlayer.playUrl(path, 'mp3');
+            }
             const info = await SoundPlayer.getInfo();
             setDuration(info.duration);
             coverCheck(cover, path, song_key);

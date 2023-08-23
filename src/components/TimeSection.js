@@ -23,7 +23,7 @@ const TimeSection = (props) => {
                 maximumTrackTintColor="#000"
                 thumbTintColor='#F6A730'
                 onSlidingComplete={async (value) => {
-                    await props.TrackPlayer.seekTo(value)
+                    props.onSeek(value)
                 }}
             />
 
