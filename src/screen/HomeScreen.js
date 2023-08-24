@@ -162,6 +162,7 @@ const HomeScreen = () => {
     const getSongsTrackPlayer = async (songs) => {
         try {
             setSongsList(songs)
+            console.log(songs.length)
             // PlayBack(0,false)
             // await TrackPlayer.add(songs);
             // const currentPlaylist = await TrackPlayer.getQueue();
@@ -217,7 +218,7 @@ const HomeScreen = () => {
 
         // await SoundPlayer.playUrl(path, 'mp3');
         // coverCheck(cover, path, song_key)
-        PlayBack(currentAudioIndex, false)
+        PlayBack(currentAudioIndex, true, false)
         setCoverRotate('play');
     }
 
@@ -259,13 +260,13 @@ const HomeScreen = () => {
     useEffect(() => {
 
         if (songsList.length > 0 && !runLoadSong) {
-            PlayBack(0, false, true)
+            PlayBack(0, false, false)
             setRunLoadSong(true)
             console.log('first Song')
         }
     }, [songsList]);
 
-    const PlayBack = async (index, setCI = true, run = false) => {
+    const PlayBack = async (index, run = true, setCI = true) => {
         try {
             console.log('index =>', index, ' / ', run)
             if (setCI) {
@@ -275,7 +276,7 @@ const HomeScreen = () => {
             const path = songsList[index].path;
             const song_key = songsList[index].song_key;
             setTitleTrack(songsList[index].name);
-            if (!run) {
+            if (run) {
                 await SoundPlayer.playUrl(path, 'mp3');
             }
             const info = await SoundPlayer.getInfo();
@@ -290,17 +291,27 @@ const HomeScreen = () => {
     const skip = async (status) => {
         try {
             await SoundPlayer.stop();
-            setCoverRotate('stop')
+            setCoverRotate('stop');
+            let pause = false;
             if (status == 'next') {
                 let nextSong;
+                let play = true;
                 if (repeatMode == 'Queue') {
                     if (currentAudioIndex == songsList.length - 1) {
                         nextSong = 0;
+                    }else{
+                        nextSong = currentAudioIndex + 1;
                     }
                 } else {
-                    nextSong = currentAudioIndex + 1;
+                    if (currentAudioIndex == songsList.length - 1) {
+                        nextSong = 0;
+                        play = false;
+                        pause = true;
+                    } else {
+                        nextSong = currentAudioIndex + 1;
+                    }
                 }
-                PlayBack(nextSong)
+                PlayBack(nextSong, play)
             } else if (status == 'previous') {
                 let prevSong;
                 if (currentAudioIndex == 0) {
@@ -313,9 +324,15 @@ const HomeScreen = () => {
                 const repaetSong = currentAudioIndex;
                 PlayBack(repaetSong)
             }
-            setCoverRotate('play')
-            setIsPlaying(true);
-            setIsPaused(false);
+            if(!pause){
+                setCoverRotate('play')
+                setIsPlaying(true);
+                setIsPaused(false);
+            }else{
+                setIsPlaying(false);
+                setIsPaused(true);
+            }
+            
         }
         catch (error) {
             console.log('skip Error =>', error)

@@ -8,7 +8,7 @@ const TitleMusicSection = (props) => {
         <VStack style={styles.BoxMain} >
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <Box style={styles.TextBox}>
-                    <Text numberOfLines={1} color={'#EE520F'} fontSize={20} fontWeight={'bold'} mb={2} >
+                    <Text numberOfLines={1} color={'#EE520F'} fontSize={18} fontWeight={'bold'} mb={2} >
                         {props.titleTrack}
                     </Text>
                 </Box>
@@ -25,7 +25,7 @@ const TitleMusicSection = (props) => {
 const styles = StyleSheet.create({
     BoxMain: {
         width: '100%',
-        marginTop: 20,
+        marginTop: 60,
         paddingHorizontal: 20,
         paddingVertical: 10,
         justifyContent: 'center',

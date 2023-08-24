@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     BoxMain: {
         height: 'auto',
         width: '100%',
-        padding: 20,
+        paddingHorizontal: 20,
         justifyContent: 'space-between',
         alignItems: 'center'
     },
