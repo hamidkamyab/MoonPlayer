@@ -13,17 +13,22 @@ import SoundPlayer from 'react-native-sound-player';
 
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
-
+const newArr = [];
+let shuffleIndex = 0;
 const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [repeatMode, setRepeatMode] = useState('Off');
+    const [shuffleMode, setShuffle] = useState(false);
+    // const [shuffleIndex, setShuffleIndex] = useState(0);
     const [titleTrack, setTitleTrack] = useState();
     const [srcArt, setSrcArt] = useState();
     const [songsList, setSongsList] = useState([]);
     const [coverRotate, setCoverRotate] = useState();
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [runLoadSong, setRunLoadSong] = useState(false)
+    const [runLoadSong, setRunLoadSong] = useState(false);
+    const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
+
     // const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
 
 
@@ -183,7 +188,6 @@ const HomeScreen = () => {
         }
     }
 
-    const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
     const Playing = async (status = null) => {
         PlayBack(currentAudioIndex, true, false)
         setCoverRotate('play');
@@ -225,22 +229,29 @@ const HomeScreen = () => {
     }, [isPlaying, isPaused]);
 
     useEffect(() => {
-
         if (songsList.length > 0 && !runLoadSong) {
             PlayBack(0, false, false)
             setRunLoadSong(true)
         }
     }, [songsList]);
-
     const PlayBack = async (index, run = true, setCI = true) => {
         try {
+            let key;
             if (setCI) {
                 setCurrentAudioIndex(index);
             }
-            const cover = songsList[index].cover;
-            const path = songsList[index].path;
-            const song_key = songsList[index].song_key;
-            setTitleTrack(songsList[index].name);
+            if (shuffleMode) {
+                key = newArr[index];
+            } else {
+                key = index;
+            }
+            console.log('Key =>', key)
+            // setShuffleIndex(key)
+            shuffleIndex = key;
+            const cover = songsList[key].cover;
+            const path = songsList[key].path;
+            const song_key = songsList[key].song_key;
+            setTitleTrack(songsList[key].name);
             if (run) {
                 await SoundPlayer.playUrl(path, 'mp3');
             }
@@ -304,52 +315,44 @@ const HomeScreen = () => {
         }
     }
 
-    const numbers = [1, 2, 3, 4, 5];
-    const newArr = [];
+
+
     function shuffleArray(arr) {
-        for (let i = arr.length - 1; i >= 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1)); // انتخاب تصادفی یک اندیس
-            // جابجایی مقدارها
-            const temp = arr[i];
-            newArr.push(arr[j]);
-            arr[i] = arr[j];
-            arr[j] = temp;
+        try{
+            for (let i = arr.length - 1; i >= 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1)); // انتخاب تصادفی یک اندیس
+                // جابجایی مقدارها
+                const temp = arr[i];
+                newArr.push(arr[j]);
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }catch(error){
+            console.log('shuffleArray Error =>',error)
         }
     }
 
-    const index = 2;
-    const val = numbers[index];
-    numbers[index] = numbers[0];
-    newArr.push(val);
-    // const firstIndexValue = numbers[0];
-    shuffleArray(numbers.slice(1));
-    console.log('newArr =>',newArr); // خانه‌های آرایه به صورت تصادفی بریزیده شده
+
+    // console.log('newArr =>',newArr); // خانه‌های آرایه به صورت تصادفی بریزیده شده
     // newArr[0] = firstIndexValue;
 
+    const shuffleSongs = () => {
+        try {
+            const songsIndex = [];
+            for (let i = 0; i < songsList.length; i++) {
+                songsIndex.push(i)
+            }
+            // const index = 2;
+            const val = songsIndex[shuffleIndex];
+            songsIndex[shuffleIndex] = songsIndex[0];
+            newArr.push(val);
+            shuffleArray(songsIndex.slice(1));
+            console.log(newArr);
+        }catch(error){
+            console.log('shuffleSongs Error =>',error)
+        }
+    }
 
-
-    // const getFFTime = (duration, status) => {
-    //     jumpTrackPlayer(duration, status)
-
-    // }
-
-    // const jumpTrackPlayer = async (duration, status) => {
-    //     try {
-    //         const currentPosition = await SoundPlayer.getInfo() // Also, you need to await this because it is async
-    //         if (duration < 2) {
-    //             duration = 5;
-    //         }
-    //         if (status == 'forward') {
-    //             await SoundPlayer.seek(currentPosition.currentTime + parseInt(duration))
-    //         } else if (status == 'backward') {
-    //             await SoundPlayer.seek(currentPosition.currentTime - parseInt(duration));
-    //         }
-    //         console.log(currentPosition.currentTime)
-    //     }
-    //     catch (error) {
-    //         console.log('jumpTrackPlayer Error => ', error)
-    //     }
-    // }
 
     const coverCheck = (cover, path = null, song_key = null) => {
         if (cover == null) {
@@ -361,63 +364,6 @@ const HomeScreen = () => {
         }
     }
 
-    // const togglePlayback = async (playbackState) => {
-    //     try {
-    //         const currentTrack = await TrackPlayer.getCurrentTrack();
-    //         if (currentTrack != null) {
-    //             if (playbackState === State.Paused || playbackState === State.Ready) {
-    //                 await TrackPlayer.play();
-    //                 setCoverRotate('play')
-    //                 songsTimer('start')
-    //             } else {
-    //                 await TrackPlayer.pause();
-    //                 setCoverRotate('pause')
-    //                 songsTimer('pause')
-    //             }
-    //         }
-    //     } catch (error) {
-    //         console.log("togglePlayback Error => ", error)
-    //     }
-    // }
-
-    // const [positionTime, setPositionTime] = useState(0)
-    // const [positionInterval, setPositionInterval] = useState(null)
-    // const songsTimer = (status = '') => {
-    //     if (status == 'start') {
-    //         setPositionInterval(setInterval(async () => {
-    //             setPositionTime(await TrackPlayer.getPosition())
-    //         }, 1000));
-    //     }
-    //     if (status == 'pause') {
-    //         clearInterval(positionInterval);
-    //     }
-    //     if (status == 'stop') {
-    //         clearInterval(positionInterval);
-    //         setPositionTime(0)
-    //     }
-
-    // }
-
-    // const getFFTime = (duration, status) => {
-    //     jumpTrackPlayer(duration, status)
-    // }
-
-    // const jumpTrackPlayer = async (duration, status) => {
-    //     try {
-    //         const currentPosition = await TrackPlayer.getPosition();
-    //         if (duration < 2) {
-    //             duration = 5;
-    //         }
-    //         if (status == 'forward') {
-    //             await TrackPlayer.seekTo(currentPosition + parseFloat(duration));
-    //         } else if (status == 'backward') {
-    //             await TrackPlayer.seekTo(currentPosition - parseFloat(duration));
-    //         }
-    //     }
-    //     catch (error) {
-    //         console.log('jumpTrackPlayer Error => ', error)
-    //     }
-    // }
 
 
     // useTrackPlayerEvents([Event.PlaybackTrackChanged], async (e) => {
@@ -527,18 +473,26 @@ const HomeScreen = () => {
     const changeRepeatMode = () => {
         if (repeatMode == 'Off') {
             setRepeatMode('Track')
-            // TrackPlayer.setRepeatMode(RepeatMode.Track)
         }
         if (repeatMode == 'Track') {
             setRepeatMode('Queue')
-            // TrackPlayer.setRepeatMode(RepeatMode.Queue)
         }
         if (repeatMode == 'Queue') {
             setRepeatMode('Off')
-            // TrackPlayer.setRepeatMode(RepeatMode.Off)
         }
     }
 
+    const changeShuffleMode = () => {
+        let shuffleStatus = !shuffleMode;
+        setShuffle(!shuffleMode);
+        if (shuffleStatus) {
+            newArr.splice(0, newArr.length);
+            setCurrentAudioIndex(0)
+            shuffleSongs();
+        }else{
+            setCurrentAudioIndex(shuffleIndex)
+        }
+    }
     // const playSelectTrack = async(trackId) =>{
     //     // const song_key = parseInt(trackId);
     //     console.log('trackId1=>',trackId)
@@ -600,9 +554,9 @@ const HomeScreen = () => {
             <TimeSection position={position} onSeek={onSeek} duration={duration} />
 
             <ControlSection PlayPause={PlayPause} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
-            {/* getFFTime={getFFTime} */}
             {/* <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
-            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} />
+            <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} changeShuffleMode={changeShuffleMode} shuffleMode={shuffleMode} setIsOpenPlaylist={setIsOpenPlaylist} />
+
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
 

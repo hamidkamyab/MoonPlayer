@@ -30,11 +30,13 @@ const HomeFooter = (props) => {
                         <Icon as={MaterialIcons} name="playlist-play" size={42} />
                     </Neomorph>
                 </Pressable>
-                <Neomorph useArt style={styles.SR_Out_Shadow} >
-                    <Neomorph inner useArt style={styles.SR_In_Shadow} >
-                        <Icon as={Ionicons} name="shuffle" size={26} />
+                <Pressable onPress={() => props.changeShuffleMode()}>
+                    <Neomorph useArt style={styles.SR_Out_Shadow} >
+                        <Neomorph inner useArt style={styles.SR_In_Shadow} >
+                            <Icon as={Ionicons} name="shuffle" size={26} color={(props.shuffleMode) ? '#EE520F' : '#666'} />
+                        </Neomorph>
                     </Neomorph>
-                </Neomorph>
+                </Pressable>
             </HStack>
         </VStack>
     );
