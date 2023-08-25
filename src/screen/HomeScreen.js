@@ -10,23 +10,12 @@ import { encode as btoa } from 'base-64'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
 import SoundPlayer from 'react-native-sound-player';
-import Slider from '@react-native-community/slider';
 
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
 
-// const setupPlayer = async () => {
-//     try {
-//         await TrackPlayer.setupPlayer();
-//     }
-//     catch (error) {
-//         console.log('setupPlayer Error => ', error)
-//     }
-// }
 const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
-    // const playbackState = usePlaybackState();
-    // const progress = useProgress();
     const [repeatMode, setRepeatMode] = useState('Off');
     const [titleTrack, setTitleTrack] = useState();
     const [srcArt, setSrcArt] = useState();
@@ -85,6 +74,8 @@ const HomeScreen = () => {
         try {
             await findAudioFiles(RNFS.ExternalStorageDirectoryPath).then(async (audioFiles) => {
                 try {
+                    const externalDirs = await RNFS.getAllExternalFilesDirs();
+                    console.log('SD Cart =>', externalDirs)
                     getSongsTrackPlayer(audioFiles);
                     saveToDB(audioFiles)
                     setIsLoading(false)
@@ -162,33 +153,16 @@ const HomeScreen = () => {
     const getSongsTrackPlayer = async (songs) => {
         try {
             setSongsList(songs)
-            console.log(songs.length)
-            // PlayBack(0,false)
-            // await TrackPlayer.add(songs);
-            // const currentPlaylist = await TrackPlayer.getQueue();
         } catch (error) {
             console.log('getSongsTrackPlayer Error => ', error)
         }
     }
 
 
-
-    // const playPauseMusic = async () => {
-    //     if (isPlaying) {
-    //         await SoundPlayer.pause();
-    //         setIsPlaying(false);
-    //     } else {
-    //         await SoundPlayer.playUrl(songsList[0].path, 'mp3');
-    //         setIsPlaying(true);
-    //     }
-    // };
-
-
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const PlayPause = async () => {
         try {
-            console.log('isPlaying', isPlaying)
             if (isPlaying) {
                 if (isPaused) {
                     await SoundPlayer.resume();
@@ -198,7 +172,6 @@ const HomeScreen = () => {
                     await SoundPlayer.pause();
                     setIsPaused(true);
                     setCoverRotate('stop');
-                    // seekController('stop');
                 }
             } else {
                 setIsPlaying(true);
@@ -212,12 +185,6 @@ const HomeScreen = () => {
 
     const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
     const Playing = async (status = null) => {
-        // const cover = songsList[currentAudioIndex].cover;
-        // const path = songsList[currentAudioIndex].path;
-        // const song_key = songsList[currentAudioIndex].song_key;
-
-        // await SoundPlayer.playUrl(path, 'mp3');
-        // coverCheck(cover, path, song_key)
         PlayBack(currentAudioIndex, true, false)
         setCoverRotate('play');
     }
@@ -262,13 +229,11 @@ const HomeScreen = () => {
         if (songsList.length > 0 && !runLoadSong) {
             PlayBack(0, false, false)
             setRunLoadSong(true)
-            console.log('first Song')
         }
     }, [songsList]);
 
     const PlayBack = async (index, run = true, setCI = true) => {
         try {
-            console.log('index =>', index, ' / ', run)
             if (setCI) {
                 setCurrentAudioIndex(index);
             }
@@ -299,7 +264,7 @@ const HomeScreen = () => {
                 if (repeatMode == 'Queue') {
                     if (currentAudioIndex == songsList.length - 1) {
                         nextSong = 0;
-                    }else{
+                    } else {
                         nextSong = currentAudioIndex + 1;
                     }
                 } else {
@@ -324,20 +289,43 @@ const HomeScreen = () => {
                 const repaetSong = currentAudioIndex;
                 PlayBack(repaetSong)
             }
-            if(!pause){
+            if (!pause) {
                 setCoverRotate('play')
                 setIsPlaying(true);
                 setIsPaused(false);
-            }else{
+            } else {
                 setIsPlaying(false);
                 setIsPaused(true);
             }
-            
+
         }
         catch (error) {
             console.log('skip Error =>', error)
         }
     }
+
+    const numbers = [1, 2, 3, 4, 5];
+    const newArr = [];
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i >= 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1)); // انتخاب تصادفی یک اندیس
+            // جابجایی مقدارها
+            const temp = arr[i];
+            newArr.push(arr[j]);
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+
+    const index = 2;
+    const val = numbers[index];
+    numbers[index] = numbers[0];
+    newArr.push(val);
+    // const firstIndexValue = numbers[0];
+    shuffleArray(numbers.slice(1));
+    console.log('newArr =>',newArr); // خانه‌های آرایه به صورت تصادفی بریزیده شده
+    // newArr[0] = firstIndexValue;
+
 
 
     // const getFFTime = (duration, status) => {
@@ -492,7 +480,6 @@ const HomeScreen = () => {
                             'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
                             [src, song_key],
                             (txObj, resultSet) => {
-
                                 //////Success
                             },
                             (txObj, error) => {
@@ -539,17 +526,14 @@ const HomeScreen = () => {
 
     const changeRepeatMode = () => {
         if (repeatMode == 'Off') {
-            console.log('changeRepeatMode =>', repeatMode)
             setRepeatMode('Track')
             // TrackPlayer.setRepeatMode(RepeatMode.Track)
         }
         if (repeatMode == 'Track') {
-            console.log('changeRepeatMode =>', repeatMode)
             setRepeatMode('Queue')
             // TrackPlayer.setRepeatMode(RepeatMode.Queue)
         }
         if (repeatMode == 'Queue') {
-            console.log('changeRepeatMode =>', repeatMode)
             setRepeatMode('Off')
             // TrackPlayer.setRepeatMode(RepeatMode.Off)
         }
@@ -578,20 +562,13 @@ const HomeScreen = () => {
 
         if (isPlaying) {
             const subscription = SoundPlayer.addEventListener('FinishedPlaying', () => {
-                console.log('repeatMode 0 =>', repeatMode)
-                // setIsPlaying(false);
+
                 if (repeatMode == 'Track') {
                     skip('repeat')
                 } else {
                     skip('next')
                 }
-                // setPosition(0);
             });
-            // setInterval(() => {
-            //     if (isPlaying) {
-            //         console.log('Play')
-            //     }
-            // }, 1000);
 
             return () => {
                 subscription.remove();
