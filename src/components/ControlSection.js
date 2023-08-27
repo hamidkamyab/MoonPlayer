@@ -37,8 +37,8 @@ const ControlSection = (props) => {
             <Pressable onPress={props.previous} onPressIn={() => setPressPrevBtn(true)} onPressOut={() => setPressPrevBtn(false)}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
-                        <LinearGradient colors={pressPrevBtn ? ['#1a1b1e', '#282b2e'] : ['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
-                            <Icon as={Entypo} name="controller-jump-to-start" size={25} color={pressPrevBtn ? '#aaa' : '#ccc'} />
+                        <LinearGradient colors={pressPrevBtn ? ['#e0e0e0', '#efefef'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                            <Icon as={Entypo} name="controller-jump-to-start" size={25} color={pressPrevBtn ? '#EE520F' : '#666'} />
                         </LinearGradient>
                     </Neomorph>
                 </Neomorph>
@@ -55,8 +55,8 @@ const ControlSection = (props) => {
             <Pressable onPress={props.next} onPressIn={() => setPressNextBtn(true)} onPressOut={() => setPressNextBtn(false)}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
-                        <LinearGradient colors={pressNextBtn ? ['#1a1b1e', '#282b2e'] : ['#32363A', '#232529']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
-                            <Icon as={Entypo} name="controller-next" size={25} color={pressNextBtn ? '#aaa' : '#ccc'} />
+                        <LinearGradient colors={pressNextBtn ? ['#e0e0e0', '#efefef'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                            <Icon as={Entypo} name="controller-next" size={25} color={pressNextBtn ? '#EE520F' : '#666'} />
                         </LinearGradient>
                     </Neomorph>
                 </Neomorph>
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     NexPrevShadow: {
         shadowOffset: { width: 8, height: 8 },
         shadowRadius: 8,
-        backgroundColor: 'rgb(46,48,51)',
+        backgroundColor: '#e0e0e0',
         width: 65,
         height: 65,
         borderRadius: 65,
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     NexPrevInShadow: {
         shadowOffset: { width: 6, height: 6 },
         shadowRadius: 4,
-        backgroundColor: 'rgb(26,27,30)',
+        backgroundColor: '#e0e0e0',
         width: 59,
         height: 59,
         borderRadius: 59,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     playShadow: {
         shadowOffset: { width: 9, height: 9 },
         shadowRadius: 9,
-        backgroundColor: 'rgb(122,98,101)',
+        backgroundColor: '#e0e0e0',
         width: 90,
         height: 90,
         borderRadius: 90,

@@ -51,7 +51,7 @@ const CoverSection = (props) => {
                 <HStack style={styles.FavEquBox}>
                     <Neomorph useArt style={styles.outShadow} >
                         <Neomorph inner useArt style={styles.inShadow} >
-                            <LinearGradient colors={['#2B2E31', '#1B1D20']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                            <LinearGradient colors={['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
                                 <Icon as={AntDesign} name='heart' size={22} color={'#EE520F'} />
                             </LinearGradient>
                         </Neomorph>
@@ -60,8 +60,8 @@ const CoverSection = (props) => {
                     <Neomorph useArt style={styles.outShadow} >
                         <Pressable onPress={() => props.setIsOpenEqualizer(true)}>
                             <Neomorph inner useArt style={styles.inShadow} >
-                                <LinearGradient colors={['#2B2E31', '#1B1D20']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
-                                    <Icon as={MaterialIcons} name='equalizer' size={26} color={'#ccc'} />
+                                <LinearGradient colors={['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                                    <Icon as={MaterialIcons} name='equalizer' size={26} color={'#666'} />
                                 </LinearGradient>
                             </Neomorph>
                         </Pressable>
@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     coverShadow: {
-        shadowOffset: { width: 26, height: 26 },
-        shadowRadius: 26,
-        backgroundColor: 'rgb(42,44,46)',
+        shadowOffset: { width: 14, height: 14 },
+        shadowRadius: 16,
+        backgroundColor: '#e0e0e0',
         width: 260,
         height: 260,
         borderRadius: 260,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     outShadow: {
         shadowOffset: { width: 5, height: 5 },
         shadowRadius: 5,
-        backgroundColor: 'rgb(46,48,51)',
+        backgroundColor: '#e0e0e0',
         width: 52,
         height: 52,
         borderRadius: 52,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     inShadow: {
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 4,
-        backgroundColor: 'rgb(36,41,45)',
+        backgroundColor: '#e0e0e0',
         width: 46,
         height: 46,
         borderRadius: 46,

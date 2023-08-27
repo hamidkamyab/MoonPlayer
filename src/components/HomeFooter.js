@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     PlayList: {
         shadowOffset: { width: 5, height: 5 },
         shadowRadius: 5,
-        backgroundColor: 'rgb(35,37,40)',
+        backgroundColor: '#e0e0e0',
         width: 58,
         height: 58,
         borderRadius: 58,
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     SR_In_Shadow: {
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 4,
-        backgroundColor: 'rgb(35,37,40)',
+        backgroundColor: '#e0e0e0',
         width: 40,
         height: 40,
         borderRadius: 40,
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     SR_Out_Shadow: {
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 4,
-        backgroundColor: 'rgb(35,37,40)',
+        backgroundColor: '#e0e0e0',
         width: 46,
         height: 46,
         borderRadius: 46,

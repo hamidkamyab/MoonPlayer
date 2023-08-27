@@ -28,24 +28,42 @@ const HomeScreen = () => {
     const [duration, setDuration] = useState(0);
     const [runLoadSong, setRunLoadSong] = useState(false);
     const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
+    const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
 
-    // const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
+
+
+
+    // let generateUniqueCode = () => {
+    //     const now = new Date();
+    //     const year = now.getFullYear().toString().slice(-2); // دو رقم آخر سال
+    //     const month = (now.getMonth() + 1).toString().padStart(2, '0'); // ماه با دو رقم
+    //     const day = now.getDate().toString().padStart(2, '0'); // روز با دو رقم
+    //     const hours = now.getHours().toString().padStart(2, '0'); // ساعت با دو رقم
+    //     const minutes = now.getMinutes().toString().padStart(2, '0'); // دقیقه با دو رقم
+    //     const seconds = now.getSeconds().toString().padStart(2, '0'); // ثانیه با دو رقم
+    //     const r1 = Math.floor(Math.random(0, 9) * 10);
+    //     const r2 = Math.floor(Math.random(0, 9) * 10);
+    //     // ترکیب تاریخ و زمان به عنوان کد یونیک
+    //     const uniqueCode = year + month + day + hours + minutes + seconds + r1 + r2;
+    //     return uniqueCode;
+
+    // };
 
 
     let generateUniqueCode = () => {
         const now = new Date();
+        // const timestamp = now.getTime(); // میلی‌ثانیه از زمان Unix Epoch
+        const random = Math.floor(Math.random(0, 9) * 100); // عدد تصادفی بین 10 تا 99
+
         const year = now.getFullYear().toString().slice(-2); // دو رقم آخر سال
         const month = (now.getMonth() + 1).toString().padStart(2, '0'); // ماه با دو رقم
         const day = now.getDate().toString().padStart(2, '0'); // روز با دو رقم
         const hours = now.getHours().toString().padStart(2, '0'); // ساعت با دو رقم
         const minutes = now.getMinutes().toString().padStart(2, '0'); // دقیقه با دو رقم
         const seconds = now.getSeconds().toString().padStart(2, '0'); // ثانیه با دو رقم
-        const r1 = Math.floor(Math.random(0, 9) * 10);
-        const r2 = Math.floor(Math.random(0, 9) * 10);
-        // ترکیب تاریخ و زمان به عنوان کد یونیک
-        const uniqueCode = year + month + day + hours + minutes + seconds + r1 + r2;
-        return uniqueCode;
 
+        const uniqueCode = year + month + day + hours + minutes + seconds + random.toString().padStart(2, '0');
+        return uniqueCode;
     };
 
     /////////////////////Find And Save All Songs////////////////////
@@ -251,6 +269,7 @@ const HomeScreen = () => {
             const cover = songsList[key].cover;
             const path = songsList[key].path;
             const song_key = songsList[key].song_key;
+            setCurrentTrackPlaylist(song_key);
             setTitleTrack(songsList[key].name);
             if (run) {
                 await SoundPlayer.playUrl(path, 'mp3');
@@ -262,6 +281,17 @@ const HomeScreen = () => {
         catch (error) {
             console.log('PlayBack Error => ', error)
         }
+    }
+
+    const playSelectTrack = async (trackId) => {
+        // const song_key = parseInt(trackId);
+        console.log('trackId1=>', trackId)
+        PlayBack(trackId, true, true)
+        setCoverRotate('play')
+        setIsPlaying(true);
+        setIsPaused(false);
+        ClosePlaylist()
+        console.log('trackId2=>', trackId)
     }
 
     const skip = async (status) => {
@@ -318,7 +348,7 @@ const HomeScreen = () => {
 
 
     function shuffleArray(arr) {
-        try{
+        try {
             for (let i = arr.length - 1; i >= 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1)); // انتخاب تصادفی یک اندیس
                 // جابجایی مقدارها
@@ -327,8 +357,8 @@ const HomeScreen = () => {
                 arr[i] = arr[j];
                 arr[j] = temp;
             }
-        }catch(error){
-            console.log('shuffleArray Error =>',error)
+        } catch (error) {
+            console.log('shuffleArray Error =>', error)
         }
     }
 
@@ -348,8 +378,8 @@ const HomeScreen = () => {
             newArr.push(val);
             shuffleArray(songsIndex.slice(1));
             console.log(newArr);
-        }catch(error){
-            console.log('shuffleSongs Error =>',error)
+        } catch (error) {
+            console.log('shuffleSongs Error =>', error)
         }
     }
 
@@ -489,17 +519,11 @@ const HomeScreen = () => {
             newArr.splice(0, newArr.length);
             setCurrentAudioIndex(0)
             shuffleSongs();
-        }else{
+        } else {
             setCurrentAudioIndex(shuffleIndex)
         }
     }
-    // const playSelectTrack = async(trackId) =>{
-    //     // const song_key = parseInt(trackId);
-    //     console.log('trackId1=>',trackId)
-    //     await TrackPlayer.skip(trackId);
-    //     await TrackPlayer.play();
-    //     console.log('trackId2=>',trackId)
-    // }
+
 
 
     const onSeek = async (value) => {
@@ -560,8 +584,8 @@ const HomeScreen = () => {
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
 
-            <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} />
-            {/* currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} */}
+            <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} />
+            {/*  playSelectTrack={playSelectTrack} */}
 
             <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
 

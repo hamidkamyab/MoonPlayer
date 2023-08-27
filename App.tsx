@@ -78,9 +78,9 @@ function App(): JSX.Element {
   }, [])
 
   return (
-    <LinearGradient colors={['#2B2E31', '#1F2124']} style={styles.linearGradient}>
+    <LinearGradient colors={['#e0e0e0', '#dadada']} style={styles.linearGradient}>
       <NativeBaseProvider>
-        <StatusBar backgroundColor={'#2B2E31'} />
+        <StatusBar backgroundColor={'#e0e0e0'} barStyle={'dark-content'} />
         <NavigationContainer theme={MyTheme} >
           <Stack.Navigator screenOptions={({ route, navigation }) => ({
             headerShown: false
