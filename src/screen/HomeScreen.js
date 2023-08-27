@@ -590,7 +590,7 @@ const HomeScreen = () => {
             <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
 
             <VStack position={'absolute'} bottom={4} alignItems={'center'} w={'100%'} >
-                <Text color={'#666'} fontSize={10} fontWeight={'bold'} >Designed By: HamidKamyab</Text>
+                <Text color={'#666'} fontSize={10} fontWeight={'bold'} >Designed By: Hamid Kamyab</Text>
             </VStack>
         </Box>
     );

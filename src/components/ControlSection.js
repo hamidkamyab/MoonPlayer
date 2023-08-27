@@ -34,7 +34,7 @@ const ControlSection = (props) => {
     return (
         <HStack justifyContent={'center'} alignItems={'center'} my={5} space={12} >
 
-            <Pressable onPress={props.previous} onPressIn={() => setPressPrevBtn(true)} onPressOut={() => setPressPrevBtn(false)}>
+            <Pressable onPress={props.previous} onPressIn={() => setPressPrevBtn(true)} onPressOut={() => setPressPrevBtn(false)}  style={{zIndex:5}}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
                         <LinearGradient colors={pressPrevBtn ? ['#e0e0e0', '#efefef'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
@@ -44,7 +44,7 @@ const ControlSection = (props) => {
                 </Neomorph>
             </Pressable>
 
-            <Pressable onPress={props.PlayPause}>
+            <Pressable onPress={props.PlayPause} style={{zIndex:5}}>
                 <Neomorph useArt style={styles.playShadow}>
                     <Neomorph inner useArt style={playBtnStatus ? styles.playingInShadow : styles.playInShadow} >
                         <Icon as={Entypo} name={props.isPlaying ? (props.isPaused ? "controller-play" : "controller-paus") : "controller-play"} size={54} color="#fff" style={playBtnStatus ? { paddingLeft: 0} : { paddingLeft: 2, transform: [{ rotate: '180deg' }]}} />
@@ -52,7 +52,7 @@ const ControlSection = (props) => {
                 </Neomorph>
             </Pressable>
 
-            <Pressable onPress={props.next} onPressIn={() => setPressNextBtn(true)} onPressOut={() => setPressNextBtn(false)}>
+            <Pressable onPress={props.next} onPressIn={() => setPressNextBtn(true)} onPressOut={() => setPressNextBtn(false)}  style={{zIndex:5}}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
                         <LinearGradient colors={pressNextBtn ? ['#e0e0e0', '#efefef'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>

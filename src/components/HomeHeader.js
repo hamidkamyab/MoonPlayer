@@ -15,7 +15,7 @@ const HomeHeader = (props) => {
                 </Neomorph>
             </Neomorph>
             <Box>
-                <Text color="#666">PLAYING NOW</Text>
+                <Text color="#666">MOON PLAYER</Text>
             </Box>
             <Pressable onPress={()=>props.onOpen()} >
                 <Neomorph useArt style={styles.outShadow} >

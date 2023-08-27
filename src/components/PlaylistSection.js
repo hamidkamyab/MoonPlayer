@@ -1,30 +1,46 @@
 ﻿/* eslint-disable prettier/prettier */
-import { Modal, HStack, Text, VStack, Box, Icon, Pressable, ScrollView, FlatList } from 'native-base';
+import { Modal, HStack, Text, VStack, Box, Icon, Pressable, ScrollView, FlatList, View } from 'native-base';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import EvilIcons from 'react-native-vector-icons/EvilIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
+import MarqueeView from 'react-native-marquee-view';
 
 const PlaylistSection = (props) => {
     // console.log('props.songsList =>', props.currentTrackPlaylist)
 
     const renderItem = ({ item, index }) => (
-        <Pressable onPress={()=>props.playSelectTrack(item.id - 1)} >
-        <HStack alignItems={'center'} py={2} borderBottomWidth={1} borderBottomColor={'#444'} >
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center' }} >
-                <Box justifyContent={'center'} marginRight={2} >
-                    <Icon as={MaterialCommunityIcons} name='music-box' size={26} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#666'} />
-                </Box>
-                <Text style={styles.ItemText} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#666'} >{index + 1} - </Text>
-                <Text style={styles.ItemText} paddingRight={50} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#666'} >{item.name}-{item.song_key}</Text>
-            </ScrollView>
-            {
-                item.song_key == props.currentTrackPlaylist ?
-                    <Icon as={EvilIcons} name='play' style={styles.playingIcon} size={28} />
-                    :
-                    ''
-            }
-        </HStack>
+        <Pressable onPress={() => props.playSelectTrack(item.id - 1)} >
+            <HStack alignItems={'center'} py={2} borderBottomWidth={1} borderBottomColor={'#444'} space={1} >
+                <HStack flex={1}>
+                    <Box justifyContent={'center'}>
+                        <Icon as={MaterialCommunityIcons} name='music-box' size={26} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#666'} />
+                    </Box>
+                </HStack>
+                <HStack flex={8}>
+                    <Text style={styles.ItemText} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#666'} >{index + 1} - </Text>
+                    {
+                        item.song_key == props.currentTrackPlaylist ?
+                            <MarqueeView style={{ width: '98%' }}>
+                                <View>
+                                    <Text style={styles.ItemText} paddingRight={50} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#666'} >{item.name}</Text>
+                                </View>
+                            </MarqueeView>
+                            :
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center' }} >
+                                <Text style={styles.ItemText} paddingRight={50} color={item.song_key == props.currentTrackPlaylist ? '#EE520F' : '#666'} >{item.name}</Text>
+                            </ScrollView>
+                    }
+                </HStack>
+                <HStack flex={1}>
+                    {
+                        item.song_key == props.currentTrackPlaylist ?
+                            <Icon as={EvilIcons} name='play' style={styles.playingIcon} size={28} />
+                            :
+                            ''
+                    }
+                </HStack>
+            </HStack>
         </Pressable>
     );
     return (
@@ -58,7 +74,7 @@ const styles = StyleSheet.create({
         height: '90%',
         padding: 15,
         backgroundColor: 'rgba(230, 230, 230,0.9)',
-        borderRadius:20
+        borderRadius: 20
     },
     ItemText: {
         fontSize: 18,
@@ -66,9 +82,7 @@ const styles = StyleSheet.create({
         fontWeight: 600
     },
     playingIcon: {
-        position: 'absolute',
         color: '#EE520F',
-        right: 0,
     }
 })
 
