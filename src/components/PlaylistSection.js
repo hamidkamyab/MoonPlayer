@@ -7,10 +7,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import MarqueeView from 'react-native-marquee-view';
 
 const PlaylistSection = (props) => {
-    // console.log('props.songsList =>', props.currentTrackPlaylist)
 
     const renderItem = ({ item, index }) => (
-        <Pressable onPress={() => props.playSelectTrack(item.id - 1)} >
+        <Pressable onPress={() => props.playSelectTrack(index)} >
             <HStack alignItems={'center'} py={2} borderBottomWidth={1} borderBottomColor={'#444'} space={1} >
                 <HStack flex={1}>
                     <Box justifyContent={'center'}>

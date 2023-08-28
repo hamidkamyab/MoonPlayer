@@ -37,7 +37,7 @@ const ControlSection = (props) => {
             <Pressable onPress={props.previous} onPressIn={() => setPressPrevBtn(true)} onPressOut={() => setPressPrevBtn(false)}  style={{zIndex:5}}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
-                        <LinearGradient colors={pressPrevBtn ? ['#e0e0e0', '#efefef'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                        <LinearGradient colors={pressPrevBtn ? ['#dedede', '#ebebeb'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
                             <Icon as={Entypo} name="controller-jump-to-start" size={25} color={pressPrevBtn ? '#EE520F' : '#666'} />
                         </LinearGradient>
                     </Neomorph>
@@ -55,7 +55,7 @@ const ControlSection = (props) => {
             <Pressable onPress={props.next} onPressIn={() => setPressNextBtn(true)} onPressOut={() => setPressNextBtn(false)}  style={{zIndex:5}}>
                 <Neomorph useArt style={styles.NexPrevShadow} >
                     <Neomorph inner useArt style={styles.NexPrevInShadow} >
-                        <LinearGradient colors={pressNextBtn ? ['#e0e0e0', '#efefef'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                        <LinearGradient colors={pressNextBtn ? ['#dedede', '#ebebeb'] : ['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
                             <Icon as={Entypo} name="controller-next" size={25} color={pressNextBtn ? '#EE520F' : '#666'} />
                         </LinearGradient>
                     </Neomorph>

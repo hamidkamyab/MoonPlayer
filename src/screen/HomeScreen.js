@@ -226,15 +226,19 @@ const HomeScreen = () => {
 
     const [intervalId, setIntervalId] = useState(null);
     const seekController = (status = null) => {
-        if (status === 'stop' && intervalId) {
-            clearInterval(intervalId);
-            setIntervalId(null);
-        } else if (intervalId === null && status !== 'stop') {
-            const newIntervalId = setInterval(async () => {
-                const info = await SoundPlayer.getInfo();
-                setPosition(info.currentTime)
-            }, 1000);
-            setIntervalId(newIntervalId);
+        try{
+            if (status === 'stop' && intervalId) {
+                clearInterval(intervalId);
+                setIntervalId(null);
+            } else if (intervalId === null && status !== 'stop') {
+                const newIntervalId = setInterval(async () => {
+                    const info = await SoundPlayer.getInfo();
+                    setPosition(info.currentTime)
+                }, 1000);
+                setIntervalId(newIntervalId);
+            }
+        } catch (error){
+            console.log('seekController Error => ',error)
         }
     };
 
@@ -285,13 +289,16 @@ const HomeScreen = () => {
 
     const playSelectTrack = async (trackId) => {
         // const song_key = parseInt(trackId);
-        console.log('trackId1=>', trackId)
-        PlayBack(trackId, true, true)
-        setCoverRotate('play')
-        setIsPlaying(true);
-        setIsPaused(false);
-        ClosePlaylist()
-        console.log('trackId2=>', trackId)
+        console.log('trackId => ',trackId)
+        try {
+            PlayBack(trackId, true, true)
+            setCoverRotate('play')
+            setIsPlaying(true);
+            setIsPaused(false);
+            ClosePlaylist()
+        } catch (error) {
+            console.log('playSelectTrack Error => ', error)
+        }
     }
 
     const skip = async (status) => {
@@ -439,48 +446,52 @@ const HomeScreen = () => {
     // })
 
     const getCover = async (path, song_key) => {
-        const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
-        await new jsmediatags.Reader(path)
-            .read({
-                onSuccess: (tag) => {
-                    var tags = tag.tags;
-                    const { data, format } = tags.picture;
-                    let base64String = "";
-                    for (let i = 0; i < data.length; i++) {
-                        base64String += String.fromCharCode(data[i]);
+        try {
+            const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
+            await new jsmediatags.Reader(path)
+                .read({
+                    onSuccess: (tag) => {
+                        var tags = tag.tags;
+                        const { data, format } = tags.picture;
+                        let base64String = "";
+                        for (let i = 0; i < data.length; i++) {
+                            base64String += String.fromCharCode(data[i]);
+                        }
+                        const src = `data:${format};base64,${btoa(base64String)}`;
+                        songsList[currentAudioIndex + 1].cover = src;
+                        db.transaction(tx => {
+                            tx.executeSql(
+                                'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
+                                [src, song_key],
+                                (txObj, resultSet) => {
+                                    //////Success
+                                },
+                                (txObj, error) => {
+                                    console.log('Error Submit Cover')
+                                }
+                            );
+                        });
+                        setSrcArt(src)
+                    },
+                    onError: (error) => {
+                        db.transaction(tx => {
+                            tx.executeSql(
+                                'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
+                                ['default', song_key],
+                                (txObj, resultSet) => {
+                                    //////Success
+                                },
+                                (txObj, error) => {
+                                    console.log('Error Submit Defualt Cover')
+                                }
+                            );
+                        });
+                        setSrcArt(null)
                     }
-                    const src = `data:${format};base64,${btoa(base64String)}`;
-                    songsList[currentAudioIndex + 1].cover = src;
-                    db.transaction(tx => {
-                        tx.executeSql(
-                            'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
-                            [src, song_key],
-                            (txObj, resultSet) => {
-                                //////Success
-                            },
-                            (txObj, error) => {
-                                console.log('Error Submit Cover')
-                            }
-                        );
-                    });
-                    setSrcArt(src)
-                },
-                onError: (error) => {
-                    db.transaction(tx => {
-                        tx.executeSql(
-                            'UPDATE songsTbl SET cover = ? WHERE song_key = ?',
-                            ['default', song_key],
-                            (txObj, resultSet) => {
-                                //////Success
-                            },
-                            (txObj, error) => {
-                                console.log('Error Submit Defualt Cover')
-                            }
-                        );
-                    });
-                    setSrcArt(null)
-                }
-            });
+                });
+        } catch (error) {
+            console.log('getCover Error =>', error)
+        }
     }
 
     const { isOpen, onOpen, onClose } = useDisclose();
@@ -513,14 +524,18 @@ const HomeScreen = () => {
     }
 
     const changeShuffleMode = () => {
-        let shuffleStatus = !shuffleMode;
-        setShuffle(!shuffleMode);
-        if (shuffleStatus) {
-            newArr.splice(0, newArr.length);
-            setCurrentAudioIndex(0)
-            shuffleSongs();
-        } else {
-            setCurrentAudioIndex(shuffleIndex)
+        try {
+            let shuffleStatus = !shuffleMode;
+            setShuffle(!shuffleMode);
+            if (shuffleStatus) {
+                newArr.splice(0, newArr.length);
+                setCurrentAudioIndex(0)
+                shuffleSongs();
+            } else {
+                setCurrentAudioIndex(shuffleIndex)
+            }
+        } catch (error){
+            console.log('changeShuffleMode Error => ',error)
         }
     }
 
