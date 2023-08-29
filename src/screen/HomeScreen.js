@@ -296,6 +296,7 @@ const HomeScreen = () => {
                 if (repeatMode == 'Queue') {
                     if (currentAudioIndex == songsList.length - 1) {
                         nextSong = 0;
+                        pause = false;
                     } else {
                         nextSong = currentAudioIndex + 1;
                     }
