@@ -56,7 +56,7 @@ const PlaylistSection = (props) => {
                     </HStack>
 
                     <FlatList
-                        data={props.songsList}
+                        data={props.shuffleMode? props.shuffleSongsList : props.songsList}
                         keyExtractor={(item, index) => index}
                         renderItem={renderItem}
                         showsVerticalScrollIndicator={false}

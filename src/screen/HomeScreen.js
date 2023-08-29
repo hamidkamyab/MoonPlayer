@@ -14,20 +14,21 @@ import SoundPlayer from 'react-native-sound-player';
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
 const newArr = [];
+const shuffleSongsList = [];
 let shuffleIndex = 0;
 const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [repeatMode, setRepeatMode] = useState('Off');
-    const [shuffleMode, setShuffle] = useState(false);
+    const [shuffleMode, setShuffleMode] = useState(false);
     // const [shuffleIndex, setShuffleIndex] = useState(0);
     const [titleTrack, setTitleTrack] = useState();
     const [albumTrack, setAlbumTrack] = useState();
     const [srcArt, setSrcArt] = useState();
-    const [details, setDetails] = useState({});
     const [songsList, setSongsList] = useState([]);
     const [coverRotate, setCoverRotate] = useState();
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [intervalId, setIntervalId] = useState(null);
     const [runLoadSong, setRunLoadSong] = useState(false);
     const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
     const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
@@ -210,20 +211,6 @@ const HomeScreen = () => {
         setCoverRotate('play');
     }
 
-    // const [intervalId, setIntervalId] = useState(null);
-    // const seekController = (status = null) => {
-    //     console.log('seekController => ', status)
-    //     setIntervalId(setInterval(() => {
-    //         console.log('Test')
-    //     }, 2000));
-    //     if (status == 'stop') {
-    //         clearInterval(intervalId)
-    //         console.log('clearInterval(intervalId)', intervalId)
-
-    //     }
-    // }
-
-    const [intervalId, setIntervalId] = useState(null);
     const seekController = (status = null) => {
         try {
             if (status === 'stop' && intervalId) {
@@ -266,13 +253,11 @@ const HomeScreen = () => {
             } else {
                 key = index;
             }
-            console.log('Key =>', key)
-            // setShuffleIndex(key)
+            
             shuffleIndex = key;
             const cover = songsList[key].cover;
             const path = songsList[key].path;
             const song_key = songsList[key].song_key;
-            const album = songsList[key].album;
             setCurrentTrackPlaylist(song_key);
             setTitleTrack(songsList[key].name);
             setAlbumTrack(songsList[key].album);
@@ -282,12 +267,6 @@ const HomeScreen = () => {
             const info = await SoundPlayer.getInfo();
             setDuration(info.duration);
             coverCheck(cover, path, song_key);
-            // console.log('cover =>', cover)
-            // console.log('details =>', details)
-            // if(details == 0){
-
-            // }
-            // getDetalis(path, song_key);
         }
         catch (error) {
             console.log('PlayBack Error => ', error)
@@ -295,8 +274,6 @@ const HomeScreen = () => {
     }
 
     const playSelectTrack = async (trackId) => {
-        // const song_key = parseInt(trackId);
-        console.log('trackId => ', trackId)
         try {
             PlayBack(trackId, true, true)
             setCoverRotate('play')
@@ -360,7 +337,6 @@ const HomeScreen = () => {
     }
 
 
-
     function shuffleArray(arr) {
         try {
             for (let i = arr.length - 1; i >= 0; i--) {
@@ -368,6 +344,7 @@ const HomeScreen = () => {
                 // جابجایی مقدارها
                 const temp = arr[i];
                 newArr.push(arr[j]);
+                shuffleSongsList.push(songsList[arr[j]])
                 arr[i] = arr[j];
                 arr[j] = temp;
             }
@@ -377,21 +354,19 @@ const HomeScreen = () => {
     }
 
 
-    // console.log('newArr =>',newArr); // خانه‌های آرایه به صورت تصادفی بریزیده شده
-    // newArr[0] = firstIndexValue;
-
     const shuffleSongs = () => {
         try {
             const songsIndex = [];
             for (let i = 0; i < songsList.length; i++) {
                 songsIndex.push(i)
             }
-            // const index = 2;
             const val = songsIndex[shuffleIndex];
             songsIndex[shuffleIndex] = songsIndex[0];
             newArr.push(val);
+            shuffleSongsList.push(songsList[val]);
             shuffleArray(songsIndex.slice(1));
-            console.log(newArr);
+            // console.log(newArr);
+            // console.log(shuffleSongsList);
         } catch (error) {
             console.log('shuffleSongs Error =>', error)
         }
@@ -408,49 +383,6 @@ const HomeScreen = () => {
         }
     }
 
-
-
-    // useTrackPlayerEvents([Event.PlaybackTrackChanged], async (e) => {
-    //     try {
-    //         if (e.type == Event.PlaybackTrackChanged && e.nextTrack != null) {
-    //             const track = await TrackPlayer.getTrack(e.nextTrack);
-    //             const { song_key } = track;
-    //             const { name } = track;
-    //             const { path } = track;
-    //             setTitleTrack(name)
-    //             // setCurrentTrackPlaylist(song_key);
-
-    //             const db = SQLite.openDatabase({
-    //                 name: 'songsDb',
-    //                 location: 'default',
-    //             });
-    //             db.transaction(tx => {
-    //                 tx.executeSql('SELECT * FROM songsTbl WHERE song_key = ?', [song_key], (tx, results) => {
-    //                     if (results.rows.length > 0) {
-    //                         if (results.rows.item(0).cover == null) {
-    //                             getCover(path, song_key)
-    //                         } else if (results.rows.item(0).cover !== 'default') {
-    //                             setSrcArt(results.rows.item(0).cover)
-    //                         } else {
-    //                             setSrcArt(null)
-    //                         }
-    //                     } else {
-    //                         setSrcArt(null); // هیچ رکوردی پیدا نشد
-    //                     }
-    //                 });
-    //             });
-    //             if (playbackState == 'paused') {
-    //                 setCoverRotate('stop')
-    //             } else if (playbackState == 'playing') {
-    //                 setCoverRotate('reset')
-    //             }
-    //             setPositionTime(0);
-    //         }
-    //     }
-    //     catch (error) {
-    //         console.log('useTrackPlayerEvents Error => ', error)
-    //     }
-    // })
 
     const getCover = async (path, song_key) => {
         try {
@@ -502,58 +434,6 @@ const HomeScreen = () => {
     }
 
 
-    const getDetalis = async (path, song_key) => {
-        try {
-            const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
-            await new jsmediatags.Reader(path)
-                .read({
-                    onSuccess: (tag) => {
-                        var tags = tag.tags;
-                        const album = tags.album;
-                        songsList[currentAudioIndex + 1].album = album;
-                        songsList[currentAudioIndex + 1].details = 1;
-                        db.transaction(tx => {
-                            tx.executeSql(
-                                'UPDATE songsTbl SET album = ? AND details = ? WHERE song_key = ?',
-                                [album, 1, song_key],
-                                (txObj, resultSet) => {
-                                    //////Success
-                                },
-                                (txObj, error) => {
-                                    console.log('Error Submit Cover')
-                                }
-                            );
-                        });
-                        // setSrcArt(src)
-                        setDetails({
-                            ...details,
-                            album: album
-                        })
-                    },
-                    onError: (error) => {
-                        songsList[currentAudioIndex + 1].details = 1;
-                        db.transaction(tx => {
-                            tx.executeSql(
-                                'UPDATE songsTbl SET album = ? AND details = ? WHERE song_key = ?',
-                                [null, 1, song_key],
-                                (txObj, resultSet) => {
-                                    //////Success
-                                },
-                                (txObj, error) => {
-                                    console.log('Error Submit Defualt Cover')
-                                }
-                            );
-                        });
-                        setDetails({
-                            ...details,
-                            album: null
-                        })
-                    }
-                });
-        } catch (error) {
-            console.log('getCover Error =>', error)
-        }
-    }
 
     const { isOpen, onOpen, onClose } = useDisclose();
 
@@ -587,13 +467,14 @@ const HomeScreen = () => {
     const changeShuffleMode = () => {
         try {
             let shuffleStatus = !shuffleMode;
-            setShuffle(!shuffleMode);
+            setShuffleMode(!shuffleMode);
             if (shuffleStatus) {
                 newArr.splice(0, newArr.length);
                 setCurrentAudioIndex(0)
                 shuffleSongs();
             } else {
-                setCurrentAudioIndex(shuffleIndex)
+                setCurrentAudioIndex(shuffleIndex);
+                shuffleSongsList.splice(0, shuffleSongsList.length);
             }
         } catch (error) {
             console.log('changeShuffleMode Error => ', error)
@@ -654,15 +535,14 @@ const HomeScreen = () => {
             <TimeSection position={position} onSeek={onSeek} duration={duration} />
 
             <ControlSection PlayPause={PlayPause} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
-            {/* <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} setIsOpenPlaylist={setIsOpenPlaylist} /> */}
+           
             <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} changeShuffleMode={changeShuffleMode} shuffleMode={shuffleMode} setIsOpenPlaylist={setIsOpenPlaylist} />
 
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
             <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
 
-            <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} />
-            {/*  playSelectTrack={playSelectTrack} */}
-
+            <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} shuffleSongsList={shuffleSongsList} shuffleMode={shuffleMode} />
+           
             <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
 
             <VStack position={'absolute'} bottom={4} alignItems={'center'} w={'100%'} >
