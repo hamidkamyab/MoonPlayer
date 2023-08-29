@@ -15,7 +15,7 @@ const TitleMusicSection = (props) => {
             </ScrollView>
             <Box style={styles.TextBox}>
                 <Text numberOfLines={1} color={'#EE520F'} fontSize={14} fontWeight={'bold'}>
-                    Shahin Najafi
+                    {props.albumTrack}
                 </Text>
             </Box>
         </VStack>

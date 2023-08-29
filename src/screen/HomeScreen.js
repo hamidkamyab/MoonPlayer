@@ -21,7 +21,9 @@ const HomeScreen = () => {
     const [shuffleMode, setShuffle] = useState(false);
     // const [shuffleIndex, setShuffleIndex] = useState(0);
     const [titleTrack, setTitleTrack] = useState();
+    const [albumTrack, setAlbumTrack] = useState();
     const [srcArt, setSrcArt] = useState();
+    const [details, setDetails] = useState({});
     const [songsList, setSongsList] = useState([]);
     const [coverRotate, setCoverRotate] = useState();
     const [position, setPosition] = useState(0);
@@ -29,25 +31,6 @@ const HomeScreen = () => {
     const [runLoadSong, setRunLoadSong] = useState(false);
     const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
     const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
-
-
-
-
-    // let generateUniqueCode = () => {
-    //     const now = new Date();
-    //     const year = now.getFullYear().toString().slice(-2); // دو رقم آخر سال
-    //     const month = (now.getMonth() + 1).toString().padStart(2, '0'); // ماه با دو رقم
-    //     const day = now.getDate().toString().padStart(2, '0'); // روز با دو رقم
-    //     const hours = now.getHours().toString().padStart(2, '0'); // ساعت با دو رقم
-    //     const minutes = now.getMinutes().toString().padStart(2, '0'); // دقیقه با دو رقم
-    //     const seconds = now.getSeconds().toString().padStart(2, '0'); // ثانیه با دو رقم
-    //     const r1 = Math.floor(Math.random(0, 9) * 10);
-    //     const r2 = Math.floor(Math.random(0, 9) * 10);
-    //     // ترکیب تاریخ و زمان به عنوان کد یونیک
-    //     const uniqueCode = year + month + day + hours + minutes + seconds + r1 + r2;
-    //     return uniqueCode;
-
-    // };
 
 
     let generateUniqueCode = () => {
@@ -81,6 +64,20 @@ const HomeScreen = () => {
                     if (lowerCaseName.endsWith('.mp3') || lowerCaseName.endsWith('.wav') || lowerCaseName.endsWith('.wma') || lowerCaseName.endsWith('.ogg') || lowerCaseName.endsWith('.flac') || lowerCaseName.endsWith('.aac')) {
                         file.song_key = generateUniqueCode();
                         file.url = 'file://' + file.path;
+                        await new jsmediatags.Reader(file.path)
+                            .read({
+                                onSuccess: (tag) => {
+                                    var tags = tag.tags;
+                                    const album = tags.album;
+                                    file.album = album;
+
+                                },
+                                onError: (error) => {
+                                    file.album = null;
+
+                                }
+                            });
+
                         audioFiles.push(file);
                     }
                 }
@@ -97,8 +94,10 @@ const HomeScreen = () => {
         try {
             await findAudioFiles(RNFS.ExternalStorageDirectoryPath).then(async (audioFiles) => {
                 try {
+
                     const externalDirs = await RNFS.getAllExternalFilesDirs();
                     console.log('SD Cart =>', externalDirs)
+
                     getSongsTrackPlayer(audioFiles);
                     saveToDB(audioFiles)
                     setIsLoading(false)
@@ -118,10 +117,10 @@ const HomeScreen = () => {
             db.transaction(tx => {
                 tx.executeSql('DROP TABLE IF EXISTS songsTbl', [],);
                 tx.executeSql(
-                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL)', [],
+                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL, album TEXT NULL)', [],
                     () => {
                         songs.forEach(file => {
-                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover,song_key) VALUES (?,?,?,?,?,?)', [file.name, file.path, file.size, file.url, null, file.song_key]);
+                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover,song_key,album) VALUES (?,?,?,?,?,?,?)', [file.name, file.path, file.size, file.url, null, file.song_key, file.album]);
                         });
                     },
                     error => {
@@ -226,7 +225,7 @@ const HomeScreen = () => {
 
     const [intervalId, setIntervalId] = useState(null);
     const seekController = (status = null) => {
-        try{
+        try {
             if (status === 'stop' && intervalId) {
                 clearInterval(intervalId);
                 setIntervalId(null);
@@ -237,8 +236,8 @@ const HomeScreen = () => {
                 }, 1000);
                 setIntervalId(newIntervalId);
             }
-        } catch (error){
-            console.log('seekController Error => ',error)
+        } catch (error) {
+            console.log('seekController Error => ', error)
         }
     };
 
@@ -273,14 +272,22 @@ const HomeScreen = () => {
             const cover = songsList[key].cover;
             const path = songsList[key].path;
             const song_key = songsList[key].song_key;
+            const album = songsList[key].album;
             setCurrentTrackPlaylist(song_key);
             setTitleTrack(songsList[key].name);
+            setAlbumTrack(songsList[key].album);
             if (run) {
                 await SoundPlayer.playUrl(path, 'mp3');
             }
             const info = await SoundPlayer.getInfo();
             setDuration(info.duration);
             coverCheck(cover, path, song_key);
+            // console.log('cover =>', cover)
+            // console.log('details =>', details)
+            // if(details == 0){
+
+            // }
+            // getDetalis(path, song_key);
         }
         catch (error) {
             console.log('PlayBack Error => ', error)
@@ -289,7 +296,7 @@ const HomeScreen = () => {
 
     const playSelectTrack = async (trackId) => {
         // const song_key = parseInt(trackId);
-        console.log('trackId => ',trackId)
+        console.log('trackId => ', trackId)
         try {
             PlayBack(trackId, true, true)
             setCoverRotate('play')
@@ -494,6 +501,60 @@ const HomeScreen = () => {
         }
     }
 
+
+    const getDetalis = async (path, song_key) => {
+        try {
+            const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
+            await new jsmediatags.Reader(path)
+                .read({
+                    onSuccess: (tag) => {
+                        var tags = tag.tags;
+                        const album = tags.album;
+                        songsList[currentAudioIndex + 1].album = album;
+                        songsList[currentAudioIndex + 1].details = 1;
+                        db.transaction(tx => {
+                            tx.executeSql(
+                                'UPDATE songsTbl SET album = ? AND details = ? WHERE song_key = ?',
+                                [album, 1, song_key],
+                                (txObj, resultSet) => {
+                                    //////Success
+                                },
+                                (txObj, error) => {
+                                    console.log('Error Submit Cover')
+                                }
+                            );
+                        });
+                        // setSrcArt(src)
+                        setDetails({
+                            ...details,
+                            album: album
+                        })
+                    },
+                    onError: (error) => {
+                        songsList[currentAudioIndex + 1].details = 1;
+                        db.transaction(tx => {
+                            tx.executeSql(
+                                'UPDATE songsTbl SET album = ? AND details = ? WHERE song_key = ?',
+                                [null, 1, song_key],
+                                (txObj, resultSet) => {
+                                    //////Success
+                                },
+                                (txObj, error) => {
+                                    console.log('Error Submit Defualt Cover')
+                                }
+                            );
+                        });
+                        setDetails({
+                            ...details,
+                            album: null
+                        })
+                    }
+                });
+        } catch (error) {
+            console.log('getCover Error =>', error)
+        }
+    }
+
     const { isOpen, onOpen, onClose } = useDisclose();
 
     const [isOpenProperties, setIsOpenProperties] = useState(false);
@@ -534,8 +595,8 @@ const HomeScreen = () => {
             } else {
                 setCurrentAudioIndex(shuffleIndex)
             }
-        } catch (error){
-            console.log('changeShuffleMode Error => ',error)
+        } catch (error) {
+            console.log('changeShuffleMode Error => ', error)
         }
     }
 
@@ -588,7 +649,7 @@ const HomeScreen = () => {
 
             <HomeHeader onOpen={onOpen} />
             <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
-            <TitleMusicSection titleTrack={titleTrack} />
+            <TitleMusicSection titleTrack={titleTrack} albumTrack={albumTrack} />
             {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} /> */}
             <TimeSection position={position} onSeek={onSeek} duration={duration} />
 

@@ -10,8 +10,8 @@ const TimeSection = (props) => {
     return (
         <Box style={styles.MainBox}>
             <HStack justifyContent={'space-between'}>
-                <Text style={styles.time}>{new Date(props.position * 1000).toISOString().substr(14, 5)}</Text>
-                <Text style={styles.time}>{new Date((props.duration * 1000) + 1000).toISOString().substr(14, 5)}</Text>
+                <Text style={styles.time} color={"#EE520F"}>{new Date(props.position * 1000).toISOString().substr(14, 5)}</Text>
+                <Text style={styles.time} color={"#EE520F"}>{new Date((props.duration * 1000) + 1000).toISOString().substr(14, 5)}</Text>
             </HStack>
 
             <Slider
@@ -20,16 +20,12 @@ const TimeSection = (props) => {
                 minimumValue={0}
                 maximumValue={props.duration}
                 minimumTrackTintColor="#EE520F"
-                maximumTrackTintColor="#000"
+                maximumTrackTintColor="#222"
                 thumbTintColor='#F6A730'
                 onSlidingComplete={async (value) => {
                     props.onSeek(value)
                 }}
             />
-
-
-
-
 
             {/* <Neomorph inner useArt style={styles.inShadowTimeBar} marginTop={40}>
                         <LinearGradient colors={['#EE520F', '#F6A730']} start={{ x: 0.1, y: 0.30 }} end={{ x: 0.6, y: 1.0 }} style={styles.linearGradient}>
@@ -50,7 +46,6 @@ const styles = StyleSheet.create({
         marginVertical: 10
     },
     time: {
-        color: '#888',
         fontSize: 16,
         fontWeight: 'bold'
     },
