@@ -39,14 +39,13 @@ const HomeScreen = () => {
         // const timestamp = now.getTime(); // میلی‌ثانیه از زمان Unix Epoch
         const random = Math.floor(Math.random(0, 9) * 100); // عدد تصادفی بین 10 تا 99
 
-        const year = now.getFullYear().toString().slice(-2); // دو رقم آخر سال
         const month = (now.getMonth() + 1).toString().padStart(2, '0'); // ماه با دو رقم
         const day = now.getDate().toString().padStart(2, '0'); // روز با دو رقم
         const hours = now.getHours().toString().padStart(2, '0'); // ساعت با دو رقم
         const minutes = now.getMinutes().toString().padStart(2, '0'); // دقیقه با دو رقم
         const seconds = now.getSeconds().toString().padStart(2, '0'); // ثانیه با دو رقم
 
-        const uniqueCode = year + month + day + hours + minutes + seconds + random.toString().padStart(2, '0');
+        const uniqueCode = month + day + hours + minutes + seconds + random.toString().padStart(2, '0');
         return uniqueCode;
     };
 
@@ -63,7 +62,8 @@ const HomeScreen = () => {
                 } else {
                     const lowerCaseName = file.name.toLowerCase();
                     if (lowerCaseName.endsWith('.mp3') || lowerCaseName.endsWith('.wav') || lowerCaseName.endsWith('.wma') || lowerCaseName.endsWith('.ogg') || lowerCaseName.endsWith('.flac') || lowerCaseName.endsWith('.aac')) {
-                        file.song_key = generateUniqueCode();
+                        const UniqueCode = generateUniqueCode() + file.size.toString().slice(-2);
+                        file.song_key = UniqueCode;
                         file.url = 'file://' + file.path;
                         await new jsmediatags.Reader(file.path)
                             .read({
@@ -71,7 +71,6 @@ const HomeScreen = () => {
                                     var tags = tag.tags;
                                     const album = tags.album;
                                     file.album = album;
-
                                 },
                                 onError: (error) => {
                                     file.album = null;
@@ -261,11 +260,14 @@ const HomeScreen = () => {
             setCurrentTrackPlaylist(song_key);
             setTitleTrack(songsList[key].name);
             setAlbumTrack(songsList[key].album);
+            await SoundPlayer.loadUrl(path, 'mp3');
             if (run) {
-                await SoundPlayer.playUrl(path, 'mp3');
+                await SoundPlayer.play();
             }
             const info = await SoundPlayer.getInfo();
             setDuration(info.duration);
+            setPosition(0)
+            console.log('info.duration =>',index,' || ',info.duration)
             coverCheck(cover, path, song_key);
         }
         catch (error) {
@@ -305,6 +307,7 @@ const HomeScreen = () => {
                         nextSong = 0;
                         play = false;
                         pause = true;
+
                     } else {
                         nextSong = currentAudioIndex + 1;
                     }
