@@ -8,3 +8,4 @@ export * from './MenuComponent';
 export * from './ControlSection';
 export * from './PropertiesComponent';
 export * from './PlaylistSection';
+export * from './FavlistSection';

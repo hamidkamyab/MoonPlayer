@@ -33,9 +33,9 @@ const CoverSection = (props) => {
     useEffect(() => {
         if (props.status == 'play') {
             drawRotate('play')
-        }else if (props.status == 'stop') {
+        } else if (props.status == 'stop') {
             drawRotate('stop')
-        } 
+        }
 
     }, [props.status]);
     return (
@@ -49,13 +49,15 @@ const CoverSection = (props) => {
                     </Neomorph>
                 </HStack>
                 <HStack style={styles.FavEquBox}>
-                    <Neomorph useArt style={styles.outShadow} >
-                        <Neomorph inner useArt style={styles.inShadow} >
-                            <LinearGradient colors={['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
-                                <Icon as={AntDesign} name='heart' size={22} color={'#EE520F'} />
-                            </LinearGradient>
+                    <Pressable onPress={() => props.handleFavorite()}>
+                        <Neomorph useArt style={styles.outShadow} >
+                            <Neomorph inner useArt style={styles.inShadow} >
+                                <LinearGradient colors={['#efefef', '#e0e0e0']} start={{ x: 0.0, y: 0.30 }} end={{ x: 0.5, y: 1.0 }} style={styles.linearGradient}>
+                                    <Icon as={AntDesign} name='heart' size={22} color={props.isFavorite == 1 ? '#EE520F' : '#666'} />
+                                </LinearGradient>
+                            </Neomorph>
                         </Neomorph>
-                    </Neomorph>
+                    </Pressable>
 
                     <Neomorph useArt style={styles.outShadow} >
                         <Pressable onPress={() => props.setIsOpenEqualizer(true)}>

@@ -9,9 +9,13 @@ import { useNavigation } from '@react-navigation/native';
 
 const MenuComponent = (props) => {
     const navigation = useNavigation();
-    const handelItem = ()=>{
+    const handleProperties = ()=>{
         props.onClose(true);
         props.setIsOpenProperties(true)
+    }
+    const handleFav = ()=>{
+        props.onClose(true);
+        props.handleShowFavorites()
     }
     return (
         <>
@@ -24,10 +28,10 @@ const MenuComponent = (props) => {
                                 <Text style={styles.ItemText}>All Music</Text>
                             </HStack>
                         </Actionsheet.Item>
-                        <Actionsheet.Item style={styles.Item}>
+                        <Actionsheet.Item style={styles.Item} onPress={()=>handleFav()}>
                             <HStack alignItems={'center'} space={2}>
-                                <Icon as={MaterialCommunityIcons} size={25} color="#666" name="playlist-plus" />
-                                <Text style={styles.ItemText}>Add To PlayList</Text>
+                                <Icon as={MaterialCommunityIcons} size={25} color="#666" name="playlist-star" />
+                                <Text style={styles.ItemText}>Favorite List</Text>
                             </HStack>
                         </Actionsheet.Item>
                         <Actionsheet.Item style={styles.Item}>
@@ -36,7 +40,7 @@ const MenuComponent = (props) => {
                                 <Text style={styles.ItemText}>Share</Text>
                             </HStack>
                         </Actionsheet.Item>
-                        <Actionsheet.Item style={styles.Item} onPress={()=>handelItem()} >
+                        <Actionsheet.Item style={styles.Item} onPress={()=>handleProperties()} >
                             <HStack alignItems={'center'} space={2}>
                                 <Icon as={MaterialCommunityIcons} size={22} color="#666" name="information-outline" />
                                 <Text style={styles.ItemText}>Properties</Text>

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
 import { Box, Spinner, useDisclose, Text, VStack } from 'native-base';
-import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent, PlaylistSection } from '../components';
+import { CoverSection, TitleMusicSection, HomeHeader, TimeSection, HomeFooter, MenuComponent, ControlSection, PropertiesComponent, EqualizerComponent, PlaylistSection, FavlistSection } from '../components';
 import RNFS from 'react-native-fs'
 // import TrackPlayer, { RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents, Event, Capability } from 'react-native-track-player';
 import { encode as btoa } from 'base-64'
@@ -15,12 +15,13 @@ const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
 const newArr = [];
 const shuffleSongsList = [];
+const favoriteList = [];
+const favoriteSongs = [];
 let shuffleIndex = 0;
 const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [repeatMode, setRepeatMode] = useState('Off');
     const [shuffleMode, setShuffleMode] = useState(false);
-    // const [shuffleIndex, setShuffleIndex] = useState(0);
     const [titleTrack, setTitleTrack] = useState();
     const [albumTrack, setAlbumTrack] = useState();
     const [srcArt, setSrcArt] = useState();
@@ -32,6 +33,8 @@ const HomeScreen = () => {
     const [runLoadSong, setRunLoadSong] = useState(false);
     const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
     const [currentTrackPlaylist, setCurrentTrackPlaylist] = useState(null);
+    const [songKey, setSongKey] = useState(0);
+    const [isFavorite, setIsFavorite] = useState(0);
 
 
     let generateUniqueCode = () => {
@@ -65,6 +68,7 @@ const HomeScreen = () => {
                         const UniqueCode = generateUniqueCode() + file.size.toString().slice(-2);
                         file.song_key = UniqueCode;
                         file.url = 'file://' + file.path;
+                        file.favorite = 0;
                         await new jsmediatags.Reader(file.path)
                             .read({
                                 onSuccess: (tag) => {
@@ -117,10 +121,10 @@ const HomeScreen = () => {
             db.transaction(tx => {
                 tx.executeSql('DROP TABLE IF EXISTS songsTbl', [],);
                 tx.executeSql(
-                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL, album TEXT NULL)', [],
+                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL, album TEXT NULL, favorite INTEGER NOT NULL)', [],
                     () => {
                         songs.forEach(file => {
-                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover,song_key,album) VALUES (?,?,?,?,?,?,?)', [file.name, file.path, file.size, file.url, null, file.song_key, file.album]);
+                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover,song_key,album,favorite) VALUES (?,?,?,?,?,?,?,?)', [file.name, file.path, file.size, file.url, null, file.song_key, file.album, 0]);
                         });
                     },
                     error => {
@@ -182,7 +186,7 @@ const HomeScreen = () => {
 
 
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isPaused, setIsPaused] = useState(false);
+    const [isPaused, setIsPaused] = useState(true);
     const PlayPause = async () => {
         try {
             if (isPlaying) {
@@ -197,6 +201,9 @@ const HomeScreen = () => {
                 }
             } else {
                 setIsPlaying(true);
+                setIsPaused(false);
+                setCoverRotate('play');
+                console.log('Test')
                 Playing()
             }
         }
@@ -252,7 +259,7 @@ const HomeScreen = () => {
             } else {
                 key = index;
             }
-            
+
             shuffleIndex = key;
             const cover = songsList[key].cover;
             const path = songsList[key].path;
@@ -267,8 +274,9 @@ const HomeScreen = () => {
             const info = await SoundPlayer.getInfo();
             setDuration(info.duration);
             setPosition(0)
-            console.log('info.duration =>',index,' || ',info.duration)
             coverCheck(cover, path, song_key);
+            setSongKey(song_key)
+            setIsFavorite(songsList[key].favorite);
         }
         catch (error) {
             console.log('PlayBack Error => ', error)
@@ -287,14 +295,18 @@ const HomeScreen = () => {
         }
     }
 
-    const skip = async (status) => {
+    const skip = async (status,skipBtn = false) => {
         try {
             await SoundPlayer.stop();
             setCoverRotate('stop');
             let pause = false;
+            let play = true;
+            if(isPaused && skipBtn){
+                play = false;
+                pause = true;
+            }
             if (status == 'next') {
                 let nextSong;
-                let play = true;
                 if (repeatMode == 'Queue') {
                     if (currentAudioIndex == songsList.length - 1) {
                         nextSong = 0;
@@ -307,7 +319,6 @@ const HomeScreen = () => {
                         nextSong = 0;
                         play = false;
                         pause = true;
-
                     } else {
                         nextSong = currentAudioIndex + 1;
                     }
@@ -451,6 +462,11 @@ const HomeScreen = () => {
         setIsOpenPlaylist(false)
     }
 
+    const [isOpenFavlist, setIsOpenFavlist] = useState(false);
+    const CloseFavlist = () => {
+        setIsOpenFavlist(false)
+    }
+
     const [isOpenEqualizer, setIsOpenEqualizer] = useState(false);
     const closeEqualizer = () => {
         setIsOpenEqualizer(false);
@@ -496,12 +512,68 @@ const HomeScreen = () => {
         }
     };
 
+
+    const handleFavorite = () => {
+        try {
+            const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
+            db.transaction(tx => {
+                tx.executeSql(
+                    'UPDATE songsTbl SET favorite = ? WHERE song_key = ?',
+                    [!isFavorite, songKey],
+                    (txObj, resultSet) => {
+                        //////Success
+                        if (isFavorite == 0) {
+                            favoriteList.push(songsList[currentAudioIndex])
+                        } else {
+                            const indexSong = favoriteList.findIndex(song => song.song_key == songKey);
+                            if (indexSong !== -1) {
+                                favoriteList.splice(indexSong, 1);
+                            }
+                        }
+                    },
+                    (txObj, error) => {
+                        console.log('Error Submit Favorite')
+                    }
+                );
+            })
+            setIsFavorite(!isFavorite)
+        } catch (error) {
+            console.log('handleFavorite Error => ', error)
+        }
+    }
+
+    // const handleFavoriteList = () => { //////////////////////////////////////////////
+        //////////////////////////////////////////////
+    // }
+    const [showFav,setShowFav] = useState(false);
+    const handleShowFavorites = () => {
+        try {
+            setIsOpenFavlist(true)
+            setIsLoading(true)
+            favoriteSongs.splice(0,favoriteSongs.length)
+            const db = SQLite.openDatabase({
+                name: 'songsDb',
+                location: 'default',
+            });
+            db.transaction(tx => {
+                tx.executeSql('SELECT * FROM songsTbl WHERE favorite = ?', [1], (_, results) => {
+                    const rows = results.rows;
+                    for (let i = 0; i < rows.length; i++) {
+                        favoriteSongs.push(rows.item(i));
+                    }
+                    setIsLoading(false)
+                });
+            });
+        } catch (error) {
+            console.log('handleShowFavorites Error => ', error)
+        }
+    }
+
     useEffect(() => {
         loadSongs();
 
         if (isPlaying) {
             const subscription = SoundPlayer.addEventListener('FinishedPlaying', () => {
-
                 if (repeatMode == 'Track') {
                     skip('repeat')
                 } else {
@@ -533,20 +605,22 @@ const HomeScreen = () => {
             }
 
             <HomeHeader onOpen={onOpen} />
-            <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} />
+            <CoverSection setIsOpenEqualizer={setIsOpenEqualizer} CoverUrl={srcArt} status={coverRotate} isFavorite={isFavorite} handleFavorite={handleFavorite} />
             <TitleMusicSection titleTrack={titleTrack} albumTrack={albumTrack} />
             {/* <TimeSection progress={progress} positionTime={positionTime} TrackPlayer={TrackPlayer} /> */}
             <TimeSection position={position} onSeek={onSeek} duration={duration} />
 
-            <ControlSection PlayPause={PlayPause} next={() => skip('next')} previous={() => skip('previous')} isPlaying={isPlaying} isPaused={isPaused} />
-           
+            <ControlSection PlayPause={PlayPause} next={() => skip('next',true)} previous={() => skip('previous',true)} isPlaying={isPlaying} isPaused={isPaused} />
+
             <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} changeShuffleMode={changeShuffleMode} shuffleMode={shuffleMode} setIsOpenPlaylist={setIsOpenPlaylist} />
 
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
-            <MenuComponent isOpen={isOpen} onClose={onClose} setIsOpenProperties={setIsOpenProperties} />
+            <MenuComponent isOpen={isOpen} onClose={onClose} handleShowFavorites={handleShowFavorites} />
 
             <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} shuffleSongsList={shuffleSongsList} shuffleMode={shuffleMode} />
-           
+
+            <FavlistSection isOpenFavlist={isOpenFavlist} isCloseFavlist={CloseFavlist} favoriteSongs={favoriteSongs} currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} />
+
             <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
 
             <VStack position={'absolute'} bottom={4} alignItems={'center'} w={'100%'} >
