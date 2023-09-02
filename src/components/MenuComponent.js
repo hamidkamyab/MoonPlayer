@@ -11,7 +11,7 @@ const MenuComponent = (props) => {
     const navigation = useNavigation();
     const handleProperties = ()=>{
         props.onClose(true);
-        props.setIsOpenProperties(true)
+        props.handleProperties()
     }
     const handleFav = ()=>{
         props.onClose(true);
@@ -22,12 +22,12 @@ const MenuComponent = (props) => {
             <Actionsheet isOpen={props.isOpen} onClose={props.onClose}>
                 <Actionsheet.Content style={styles.Content}>
                     <LinearGradient colors={['#e9e9e9','#e6e6e6','#e0e0e0']} style={styles.linearGradient}>
-                        <Actionsheet.Item style={styles.Item}>
+                        {/* <Actionsheet.Item style={styles.Item}>
                             <HStack alignItems={'center'} space={2}>
                                 <Icon as={MaterialCommunityIcons} size={25} color="#666" name="playlist-music" />
                                 <Text style={styles.ItemText}>All Music</Text>
                             </HStack>
-                        </Actionsheet.Item>
+                        </Actionsheet.Item> */}
                         <Actionsheet.Item style={styles.Item} onPress={()=>handleFav()}>
                             <HStack alignItems={'center'} space={2}>
                                 <Icon as={MaterialCommunityIcons} size={25} color="#666" name="playlist-star" />

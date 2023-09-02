@@ -10,6 +10,7 @@ import { encode as btoa } from 'base-64'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
 import SoundPlayer from 'react-native-sound-player';
+import { findFocusedRoute } from '@react-navigation/native';
 
 const jsmediatags = require('jsmediatags');
 const { height, width } = Dimensions.get('window');
@@ -18,6 +19,20 @@ const shuffleSongsList = [];
 const favoriteList = [];
 const favoriteSongs = [];
 let shuffleIndex = 0;
+var months = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+};
 const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [repeatMode, setRepeatMode] = useState('Off');
@@ -52,6 +67,21 @@ const HomeScreen = () => {
         return uniqueCode;
     };
 
+    
+    const dateTime = (date) => {
+        const mt = JSON.stringify(date);
+        const startTimeIndex = mt.indexOf('T');
+        const endTimeIndex = mt.indexOf('.');
+
+        const dateSlice = mt.slice(1,startTimeIndex);
+
+        const month = months[parseInt(dateSlice.slice(5,7))];
+        const day = dateSlice.slice(8,10);
+        const year = dateSlice.slice(0,4);
+
+        return month+'. '+day+', '+year+', '+mt.slice(startTimeIndex+1,endTimeIndex);
+    }
+
     /////////////////////Find And Save All Songs////////////////////
     const findAudioFiles = async (dirPath) => {
         try {
@@ -65,23 +95,32 @@ const HomeScreen = () => {
                 } else {
                     const lowerCaseName = file.name.toLowerCase();
                     if (lowerCaseName.endsWith('.mp3') || lowerCaseName.endsWith('.wav') || lowerCaseName.endsWith('.wma') || lowerCaseName.endsWith('.ogg') || lowerCaseName.endsWith('.flac') || lowerCaseName.endsWith('.aac')) {
-                        const UniqueCode = generateUniqueCode() + file.size.toString().slice(-2);
+                        const UniqueCode = generateUniqueCode();
                         file.song_key = UniqueCode;
                         file.url = 'file://' + file.path;
                         file.favorite = 0;
+                        file.date = dateTime(file.mtime);
                         await new jsmediatags.Reader(file.path)
                             .read({
                                 onSuccess: (tag) => {
                                     var tags = tag.tags;
-                                    const album = tags.album;
-                                    file.album = album;
+                                    file.album = tags.album;
+                                    file.title = tags.title;
+                                    file.artist = tags.artist;
+                                    file.year = tags.TDRC.data;
+                                    file.publish = tags.TPUB.data;
+                                    file.copyright = tags.WCOP.data;
                                 },
                                 onError: (error) => {
                                     file.album = null;
-
+                                    file.title = null;
+                                    file.artist = null;
+                                    file.year = null;
+                                    file.publish = null;
+                                    file.copyright = null;
                                 }
                             });
-
+                        file.album = null;
                         audioFiles.push(file);
                     }
                 }
@@ -114,17 +153,17 @@ const HomeScreen = () => {
             console.log('loadAudioFiles Error => ', error)
         }
     }
-
+    
     const saveToDB = async (songs) => {
         try {
             const db = SQLite.openDatabase({ name: 'songsDb', location: 'default' });
             db.transaction(tx => {
                 tx.executeSql('DROP TABLE IF EXISTS songsTbl', [],);
                 tx.executeSql(
-                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL, album TEXT NULL, favorite INTEGER NOT NULL)', [],
+                    'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, date TEXT NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL, album TEXT NULL, title TEXT NULL, artist TEXT NULL, year TEXT NULL, publish TEXT NULL, copyright TEXT NULL, favorite INTEGER NOT NULL)', [],
                     () => {
                         songs.forEach(file => {
-                            tx.executeSql('INSERT INTO songsTbl (name,path,size,url,cover,song_key,album,favorite) VALUES (?,?,?,?,?,?,?,?)', [file.name, file.path, file.size, file.url, null, file.song_key, file.album, 0]);
+                            tx.executeSql('INSERT INTO songsTbl (name,path,size,date,url,cover,song_key,album,favorite) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [file.name, file.path, file.size, file.date, file.url, null, file.song_key, file.album, file.title, file.artist, file.year, file.publish, file.copyright, 0]);
                         });
                     },
                     error => {
@@ -178,6 +217,7 @@ const HomeScreen = () => {
 
     const getSongsTrackPlayer = async (songs) => {
         try {
+            // console.log(songs)
             setSongsList(songs)
         } catch (error) {
             console.log('getSongsTrackPlayer Error => ', error)
@@ -542,10 +582,7 @@ const HomeScreen = () => {
         }
     }
 
-    // const handleFavoriteList = () => { //////////////////////////////////////////////
-        //////////////////////////////////////////////
-    // }
-    const [showFav,setShowFav] = useState(false);
+
     const handleShowFavorites = () => {
         try {
             setIsOpenFavlist(true)
@@ -566,6 +603,34 @@ const HomeScreen = () => {
             });
         } catch (error) {
             console.log('handleShowFavorites Error => ', error)
+        }
+    }
+
+    const handleProperties = async() => {
+        try{
+            setIsOpenProperties(true)
+            console.log(songsList[currentAudioIndex]);
+            // setIsOpenProperties(true)
+            // console.log(songsList[currentAudioIndex].path)
+            // await new jsmediatags.Reader(songsList[currentAudioIndex].path)
+            //     .read({
+            //         onSuccess: (tag) => {
+            //             var tags = tag.tags;
+            //             console.log('tags.album =>',tags.album);
+            //             console.log('tags.title => ',tags.title);
+            //             console.log('tags.artist => ',tags.artist);
+            //             console.log('tags.TDRC => ',tags.TDRC);
+            //             console.log('tags.TPUB => ',tags.TPUB);
+            //             console.log('tags.WCOP => ',tags.WCOP);
+                        
+            //         },
+            //         onError: (error) => {
+            //             console.log('Error')
+            //         }
+            //     });
+        }
+        catch(error){
+            console.log('handleProperties Error => ',error)
         }
     }
 
@@ -615,13 +680,13 @@ const HomeScreen = () => {
             <HomeFooter repeatMode={repeatMode} changeRepeatMode={changeRepeatMode} changeShuffleMode={changeShuffleMode} shuffleMode={shuffleMode} setIsOpenPlaylist={setIsOpenPlaylist} />
 
             <EqualizerComponent isOpenEqualizer={isOpenEqualizer} isClose={closeEqualizer} />
-            <MenuComponent isOpen={isOpen} onClose={onClose} handleShowFavorites={handleShowFavorites} />
+            <MenuComponent isOpen={isOpen} onClose={onClose} handleProperties={handleProperties} handleShowFavorites={handleShowFavorites} />
 
             <PlaylistSection isOpenPlaylist={isOpenPlaylist} isClosePlaylist={ClosePlaylist} songsList={songsList} currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} shuffleSongsList={shuffleSongsList} shuffleMode={shuffleMode} />
 
             <FavlistSection isOpenFavlist={isOpenFavlist} isCloseFavlist={CloseFavlist} favoriteSongs={favoriteSongs} currentTrackPlaylist={currentTrackPlaylist} playSelectTrack={playSelectTrack} />
 
-            <PropertiesComponent isOpenProperties={isOpenProperties} isClose={CloseProperties} />
+            <PropertiesComponent song={songsList[currentAudioIndex]} duration={duration} isOpenProperties={isOpenProperties} isClose={CloseProperties} />
 
             <VStack position={'absolute'} bottom={4} alignItems={'center'} w={'100%'} >
                 <Text color={'#666'} fontSize={10} fontWeight={'bold'} >Designed By: Hamid Kamyab</Text>
@@ -642,9 +707,3 @@ const styles = StyleSheet.create({
 })
 
 export { HomeScreen };
-
-
-
-
-
-
