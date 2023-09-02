@@ -163,7 +163,7 @@ const HomeScreen = () => {
                     'CREATE TABLE IF NOT EXISTS songsTbl (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, date TEXT NOT NULL, url TEXT NOT NULL, cover TEXT NULL, song_key TEXT NOT NULL, album TEXT NULL, title TEXT NULL, artist TEXT NULL, year TEXT NULL, publish TEXT NULL, copyright TEXT NULL, favorite INTEGER NOT NULL)', [],
                     () => {
                         songs.forEach(file => {
-                            tx.executeSql('INSERT INTO songsTbl (name,path,size,date,url,cover,song_key,album,favorite) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [file.name, file.path, file.size, file.date, file.url, null, file.song_key, file.album, file.title, file.artist, file.year, file.publish, file.copyright, 0]);
+                            tx.executeSql('INSERT INTO songsTbl (name,path,size,date,url,cover,song_key,album,title,artist,year,publish,copyright,favorite) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [file.name, file.path, file.size, file.date, file.url, null, file.song_key, file.album, file.title, file.artist, file.year, file.publish, file.copyright, 0]);
                         });
                     },
                     error => {
@@ -371,7 +371,7 @@ const HomeScreen = () => {
                 } else {
                     prevSong = currentAudioIndex - 1;
                 }
-                PlayBack(prevSong)
+                PlayBack(prevSong,play)
             } else if (status == 'repeat') {
                 const repaetSong = currentAudioIndex;
                 PlayBack(repaetSong)

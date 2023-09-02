@@ -3,7 +3,6 @@ import { Box, HStack, Icon, Modal, Text, VStack, View } from 'native-base';
 import React from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import MarqueeView from 'react-native-marquee-view';
 
 const PropertiesComponent = (props) => {
     return (
@@ -11,7 +10,7 @@ const PropertiesComponent = (props) => {
             <VStack style={styles.ModalContent} backgroundColor={'#e0e0e0'} space={4} >
                 <HStack alignItems={'center'} justifyContent={'space-between'}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <Text fontSize={20} fontWeight={'600'} color="#222">
+                        <Text fontSize={20} fontWeight={'600'} color="#222" style={{paddingRight:20}}>
                             {props.song && props.song.name != null ?
                                 props.song.name
                                 :
@@ -43,7 +42,7 @@ const PropertiesComponent = (props) => {
                             </VStack>
                             <VStack space={2}>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                    <Text color="#666" numberOfLines={1} >
+                                    <Text color="#666" numberOfLines={1} style={{paddingRight:100}}>
                                         {props.song && props.song.name != null ?
                                             props.song.name
                                             :
@@ -52,7 +51,7 @@ const PropertiesComponent = (props) => {
                                     </Text>
                                 </ScrollView>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                    <Text color="#666" numberOfLines={1} >
+                                    <Text color="#666" numberOfLines={1} style={{paddingRight:100}}>
                                         {props.song && props.song.path != null ?
                                             props.song.path
                                             :
